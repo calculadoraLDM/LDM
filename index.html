@@ -30,7 +30,6 @@
       z-index: 30 !important;
     }
 
-    /* Estilos de Impresión / PDF */
     @media print {
       body * {
         visibility: hidden;
@@ -44,8 +43,10 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 20px;
+        padding: 24px;
         background: white;
+        border: none !important;
+        box-shadow: none !important;
       }
       .no-print {
         display: none !important;
@@ -55,13 +56,11 @@
 </head>
 <body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col">
   
-  <!-- Alerta toast flotante -->
   <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
     <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
-    <span id="toast-msg">Espacio insuficiente</span>
+    <span id="toast-msg">Mensaje</span>
   </div>
 
-  <!-- Cabecera y Selector de Páginas/Pestañas -->
   <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-50 px-4 py-2.5 shadow-md no-print">
     <div class="w-full flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -74,7 +73,6 @@
         </div>
       </div>
 
-      <!-- Navegación de pestañas -->
       <nav class="flex items-center bg-neutral-900 p-1 rounded-lg border border-neutral-800">
         <button id="tab-btn-planner" onclick="switchTab('planner')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow">
           <i class="fa-solid fa-layer-group text-[11px]"></i> Planificador 2D
@@ -96,11 +94,10 @@
   </header>
 
   <!-- ========================================== -->
-  <!-- VISTA 1: PLANIFICADOR 2D (Estiba Interactiva) -->
+  <!-- VISTA 1: PLANIFICADOR 2D                   -->
   <!-- ========================================== -->
   <main id="view-planner" class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1">
     
-    <!-- Columna Lateral Izquierda -->
     <div class="xl:col-span-3 space-y-4">
       
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
@@ -188,7 +185,7 @@
         </form>
       </div>
 
-      <!-- Totales y Resumen -->
+      <!-- Resumen -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -223,13 +220,11 @@
           </div>
         </div>
 
-        <!-- Botón de acceso directo a cotizar -->
         <button onclick="switchTab('quote')" class="w-full mt-3 bg-black hover:bg-neutral-800 text-white font-bold py-2 rounded text-xs transition flex items-center justify-center gap-2">
           <span>Ir a Cotización & Hoja de Ruta</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </button>
       </div>
 
-      <!-- Partidas -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Partidas Introducidas</h2>
         <div id="pallet-group-list" class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1"></div>
@@ -270,223 +265,216 @@
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Panel de Datos de Ruta y Precios (5 cols) -->
+      <!-- Panel de Control Interno -->
       <div class="lg:col-span-5 space-y-5 no-print">
         
-        <!-- Direcciones de la Ruta -->
+        <!-- Direcciones con Botón de Refresco -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
-          <h2 class="text-xs font-bold text-black uppercase tracking-wider mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-route text-red-600"></i> Direcciones de Transporte
-          </h2>
+          <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
+            <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-route text-red-600"></i> Direcciones de la Ruta
+            </h2>
+            <!-- BOTÓN DE REFRESCO / CALCULAR RUTA -->
+            <button id="btn-calc-route" onclick="fetchRouteDistance()" class="bg-neutral-900 hover:bg-red-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i> 
+              <span id="refresh-text">Refrescar & Calcular Ruta</span>
+            </button>
+          </div>
           <div class="space-y-3 text-xs">
             <div>
-              <label class="block text-neutral-500 font-medium mb-1">Origen / Dirección de Carga</label>
+              <label class="block text-neutral-600 font-semibold mb-1">Punto de Carga (Origen):</label>
               <div class="relative">
                 <i class="fa-solid fa-location-dot absolute left-2.5 top-2.5 text-emerald-600"></i>
-                <input type="text" id="route-origin" value="Polígono Industrial Zona Franca, Barcelona" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded pl-8 pr-2.5 py-1.5 font-medium focus:border-red-600 focus:outline-none" />
+                <input type="text" id="route-origin" value="Barcelona" oninput="updateQuotation()" placeholder="Ej. Ciudad, Código Postal o Calle" class="w-full border border-neutral-300 rounded pl-8 pr-2.5 py-1.5 font-medium focus:border-red-600 focus:outline-none" />
               </div>
             </div>
             <div>
-              <label class="block text-neutral-500 font-medium mb-1">Destino / Dirección de Entrega</label>
+              <label class="block text-neutral-600 font-semibold mb-1">Punto de Entrega (Destino):</label>
               <div class="relative">
                 <i class="fa-solid fa-flag-checkered absolute left-2.5 top-2.5 text-red-600"></i>
-                <input type="text" id="route-destination" value="Centro Logístico de Coslada, Madrid" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded pl-8 pr-2.5 py-1.5 font-medium focus:border-red-600 focus:outline-none" />
+                <input type="text" id="route-destination" value="Madrid" oninput="updateQuotation()" placeholder="Ej. Ciudad, Código Postal o Calle" class="w-full border border-neutral-300 rounded pl-8 pr-2.5 py-1.5 font-medium focus:border-red-600 focus:outline-none" />
               </div>
             </div>
             <div>
-              <label class="block text-neutral-500 font-medium mb-1">Empresa / Cliente / Referencia</label>
+              <label class="block text-neutral-600 font-semibold mb-1">Número de Albarán / Referencia:</label>
               <input type="text" id="route-reference" value="EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-medium focus:border-red-600 focus:outline-none" />
             </div>
           </div>
         </div>
 
-        <!-- Parámetros Económicos y Modo de Cotización -->
+        <!-- Calculadora de Márgenes Interna -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-calculator text-red-600"></i> Modalidad de Transporte
+              <i class="fa-solid fa-lock text-red-600"></i> Cálculo Interno (Solo Uso Agencia)
             </h2>
             <div class="flex bg-neutral-100 p-0.5 rounded border border-neutral-200 text-xs">
-              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2.5 py-1 rounded font-bold bg-black text-white text-[11px]">Camión Completo (FTL)</button>
+              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2.5 py-1 rounded font-bold bg-black text-white text-[11px]">FTL (Completo)</button>
               <button id="btn-mode-ltl" onclick="setFreightMode('ltl')" class="px-2.5 py-1 rounded font-medium text-neutral-600 text-[11px]">Grupaje (LTL)</button>
             </div>
           </div>
 
-          <!-- Formulario Modo FTL (Completo por km) -->
           <div id="form-ftl-params" class="space-y-3 text-xs">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Distancia Total (km)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Distancia Ruta (km)</label>
                 <input type="number" id="ftl-km" value="620" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Pago Chófer (€ / km)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Coste Chófer (€/km)</label>
                 <input type="number" id="ftl-driver-rate" value="1.25" step="0.05" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Margen Comercial Mín. (%)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Margen Añadido (%)</label>
                 <input type="number" id="ftl-markup-pct" value="15.0" step="0.5" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Gasto de Peajes / Extras (€)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Peajes / Extras (€)</label>
                 <input type="number" id="ftl-extras" value="45" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
             </div>
           </div>
 
-          <!-- Formulario Modo LTL (Grupaje por LDM) -->
           <div id="form-ltl-params" class="space-y-3 text-xs hidden">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Tarifa Base por LDM (€)</label>
-                <input type="number" id="ltl-base-per-ldm" value="100" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" title="Ejemplo: 3 LDM = 300€" />
+                <label class="block text-neutral-500 font-medium mb-1">Base por LDM (€)</label>
+                <input type="number" id="ltl-base-per-ldm" value="100" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Fijo Salida / Tracción (€)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Fijo Salida (€)</label>
                 <input type="number" id="ltl-fixed-fee" value="550" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Recargo Diésel / BAF (%)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Recargo Diésel (%)</label>
                 <input type="number" id="ltl-diesel-pct" value="12.0" step="0.5" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
-                <label class="block text-neutral-500 font-medium mb-1">Suplemento Parada Extra (€)</label>
+                <label class="block text-neutral-500 font-medium mb-1">Parada Extra (€)</label>
                 <input type="number" id="ltl-extra-stop" value="60" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
             </div>
           </div>
+
+          <div class="mt-4 p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-1 font-mono text-[11px]">
+            <div class="flex justify-between text-neutral-500">
+              <span>Coste Transporte:</span>
+              <span id="calc-internal-cost" class="font-bold text-neutral-800">0,00 €</span>
+            </div>
+            <div class="flex justify-between text-emerald-700">
+              <span>Beneficio Agencia:</span>
+              <span id="calc-internal-profit" class="font-bold">0,00 €</span>
+            </div>
+            <div class="flex justify-between text-neutral-500">
+              <span>Margen Neto Real:</span>
+              <span id="calc-internal-margin" class="font-bold">0.0%</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Botones de Acción -->
-        <div class="flex gap-3">
-          <button onclick="window.print()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-xs transition shadow flex items-center justify-center gap-2">
-            <i class="fa-solid fa-file-pdf text-sm"></i> <span>Descargar / Imprimir Hoja (PDF)</span>
-          </button>
-        </div>
+        <button onclick="window.print()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-xs transition shadow flex items-center justify-center gap-2">
+          <i class="fa-solid fa-file-pdf text-base"></i> <span>Descargar / Imprimir Hoja de Carga (PDF)</span>
+        </button>
       </div>
 
-      <!-- Previsualización Oficial en Directo de la Hoja de Ruta / Carga (7 cols) -->
+      <!-- VISTA IMPRIMIBLE / PDF OFICIAL PARA EL CLIENTE -->
       <div class="lg:col-span-7">
         
-        <!-- Hoja A4 visual imprimible -->
         <div id="print-area" class="bg-white p-6 sm:p-8 rounded-xl border-2 border-neutral-800 shadow-md text-neutral-900 font-sans text-xs">
           
-          <!-- Encabezado Hoja Oficial -->
           <div class="flex items-start justify-between border-b-2 border-black pb-4 mb-5">
             <div>
               <div class="flex items-center gap-2">
-                <span class="bg-black text-white font-extrabold text-sm px-2 py-0.5 rounded font-mono">ORDEN DE CARGA</span>
-                <span class="font-extrabold text-sm tracking-tight uppercase" id="print-doc-title">HOJA DE EXPEDICIÓN & RUTA</span>
+                <span class="bg-black text-white font-extrabold text-sm px-2 py-0.5 rounded font-mono">ORDEN DE TRANSPORTE</span>
+                <span class="font-extrabold text-sm tracking-tight uppercase">HOJA DE EXPEDICIÓN</span>
               </div>
-              <div class="text-[11px] text-neutral-500 font-mono mt-1">Ref: <span id="preview-ref" class="font-bold text-black">EXPEDICIÓN R-2026-0048</span></div>
+              <div class="text-[11px] text-neutral-500 font-mono mt-1">Referencia: <span id="preview-ref" class="font-bold text-black">EXPEDICIÓN R-2026-0048</span></div>
             </div>
             <div class="text-right">
-              <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">TRANSPORTE & LOGÍSTICA</div>
-              <div class="text-[10px] text-neutral-400 font-mono" id="print-date">Fecha: 03/11/2026</div>
+              <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">SERVICIO DE CARGA</div>
+              <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 03/11/2026</div>
             </div>
           </div>
 
-          <!-- Origen y Destino -->
-          <div class="grid grid-cols-2 gap-4 mb-5 p-3 rounded-lg bg-neutral-50 border border-neutral-200">
+          <div class="grid grid-cols-2 gap-4 mb-5 p-3.5 rounded-lg bg-neutral-50 border border-neutral-200">
             <div>
-              <span class="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 block mb-0.5">Punto de Carga / Origen</span>
-              <div class="font-bold text-xs text-neutral-900" id="preview-origin">Polígono Industrial Zona Franca, Barcelona</div>
+              <span class="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 block mb-1">
+                <i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Punto de Carga / Origen
+              </span>
+              <div class="font-bold text-xs text-neutral-900" id="preview-origin">Barcelona</div>
             </div>
             <div>
-              <span class="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 block mb-0.5">Punto de Descarga / Destino</span>
-              <div class="font-bold text-xs text-neutral-900" id="preview-dest">Centro Logístico de Coslada, Madrid</div>
+              <span class="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 block mb-1">
+                <i class="fa-solid fa-flag-checkered text-red-600 mr-1"></i> Punto de Descarga / Destino
+              </span>
+              <div class="font-bold text-xs text-neutral-900" id="preview-dest">Madrid</div>
             </div>
           </div>
 
-          <!-- Resumen de Ocupación y LDM -->
           <div class="mb-5">
-            <h3 class="text-[10px] uppercase font-bold tracking-wider text-black border-b border-neutral-300 pb-1 mb-2">1. Resumen de Ocupación de Vehículo</h3>
+            <h3 class="text-[10px] uppercase font-bold tracking-wider text-black border-b border-neutral-300 pb-1 mb-2">1. Capacidad & Ocupación del Vehículo</h3>
             <div class="grid grid-cols-4 gap-2 text-center font-mono">
               <div class="border border-neutral-200 p-2 rounded">
-                <span class="text-[9px] text-neutral-400 block">BULTOS TOTAL</span>
+                <span class="text-[9px] text-neutral-400 block">TOTAL BULTOS</span>
                 <span id="preview-total-pallets" class="font-bold text-sm text-black">0</span>
               </div>
               <div class="border border-neutral-200 p-2 rounded">
-                <span class="text-[9px] text-neutral-400 block">PESO TOTAL</span>
+                <span class="text-[9px] text-neutral-400 block">PESO BRUTO</span>
                 <span id="preview-total-weight" class="font-bold text-sm text-black">0 kg</span>
               </div>
               <div class="border border-neutral-200 p-2 rounded">
-                <span class="text-[9px] text-neutral-400 block">LDM SUELO</span>
+                <span class="text-[9px] text-neutral-400 block">LDM FÍSICO</span>
                 <span id="preview-total-ldm-phys" class="font-bold text-sm text-black">0.00 m</span>
               </div>
               <div class="border-2 border-red-600 bg-red-50 p-2 rounded">
-                <span class="text-[9px] text-red-600 font-bold block">LDM TASABLES</span>
+                <span class="text-[9px] text-red-600 font-bold block">LDM FACTURABLES</span>
                 <span id="preview-total-ldm-chrg" class="font-extrabold text-sm text-red-600">0.00 m</span>
               </div>
             </div>
           </div>
 
-          <!-- Liquidación Económica y Cotización -->
           <div class="mb-5">
-            <h3 class="text-[10px] uppercase font-bold tracking-wider text-black border-b border-neutral-300 pb-1 mb-2">2. Liquidación Económica & Tarifas</h3>
-            <div class="border border-neutral-300 rounded-lg overflow-hidden">
-              <table class="w-full text-left font-mono">
-                <tbody class="divide-y divide-neutral-200 text-xs">
-                  <tr class="bg-neutral-50">
-                    <td class="p-2 text-neutral-600 font-sans">Concepto / Modalidad:</td>
-                    <td id="preview-mode-desc" class="p-2 font-bold text-black text-right font-sans">Camión Completo (FTL) - 620 km</td>
-                  </tr>
-                  <tr>
-                    <td class="p-2 text-neutral-600 font-sans">Coste del Transportista (Chófer):</td>
-                    <td id="preview-cost-driver" class="p-2 font-bold text-neutral-900 text-right">0,00 €</td>
-                  </tr>
-                  <tr>
-                    <td class="p-2 text-neutral-600 font-sans">Gastos Adicionales / Suplementos:</td>
-                    <td id="preview-cost-extras" class="p-2 font-bold text-neutral-900 text-right">0,00 €</td>
-                  </tr>
-                  <tr class="bg-neutral-50/80">
-                    <td class="p-2 text-neutral-600 font-sans">Margen Comercial Aplicado:</td>
-                    <td id="preview-margin-pct" class="p-2 font-bold text-emerald-700 text-right">+15.0% (Beneficio neto: 0,00 €)</td>
-                  </tr>
-                  <tr class="bg-neutral-900 text-white font-bold text-sm">
-                    <td class="p-2.5 font-sans">PRECIO RECOMENDADO / VENTA CLIENTE:</td>
-                    <td id="preview-recommended-price" class="p-2.5 text-right text-red-400 font-extrabold">0,00 € + IVA</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Desglose de Partidas -->
-          <div class="mb-6">
-            <h3 class="text-[10px] uppercase font-bold tracking-wider text-black border-b border-neutral-300 pb-1 mb-2">3. Desglose de Mercancía Estibada</h3>
+            <h3 class="text-[10px] uppercase font-bold tracking-wider text-black border-b border-neutral-300 pb-1 mb-2">2. Desglose de Mercancía Estibada</h3>
             <div class="border border-neutral-200 rounded overflow-hidden">
               <table class="w-full text-left font-mono text-[11px]">
                 <thead class="bg-neutral-100 border-b border-neutral-200 text-neutral-600">
                   <tr>
-                    <th class="p-1.5">Partida</th>
+                    <th class="p-1.5">Descripción de Partida</th>
                     <th class="p-1.5 text-center">Cant.</th>
                     <th class="p-1.5 text-center">Dimensiones</th>
-                    <th class="p-1.5 text-center">Peso Ud</th>
+                    <th class="p-1.5 text-center">Peso Unitario</th>
                     <th class="p-1.5 text-right">LDM Físico</th>
-                    <th class="p-1.5 text-right">LDM Tasable</th>
+                    <th class="p-1.5 text-right">LDM Tasables</th>
                   </tr>
                 </thead>
-                <tbody id="preview-items-table" class="divide-y divide-neutral-100">
-                  <!-- Inyectado dinámicamente -->
-                </tbody>
+                <tbody id="preview-items-table" class="divide-y divide-neutral-100"></tbody>
               </table>
             </div>
           </div>
 
-          <!-- Firmas Legales -->
-          <div class="grid grid-cols-2 gap-8 pt-6 border-t border-neutral-300 text-center text-[10px] text-neutral-500 font-mono">
+          <div class="mb-6 p-4 rounded-lg bg-neutral-900 text-white flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-neutral-400 block font-mono">Modalidad de Envío:</span>
+              <span id="preview-mode-desc" class="font-bold text-xs">Camión Completo (FTL)</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase tracking-wider text-red-400 block font-mono font-bold">Importe Cotizado / Total Servicio:</span>
+              <span id="preview-recommended-price" class="text-xl font-extrabold text-white font-mono">0,00 € + IVA</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-8 pt-4 border-t border-neutral-300 text-center text-[10px] text-neutral-500 font-mono">
             <div>
               <div class="border-b border-neutral-400 h-14 mb-1"></div>
-              <span>Firma y Sello Cargador / Agencia</span>
+              <span>Conforme Cliente / Cargador (Firma y Sello)</span>
             </div>
             <div>
               <div class="border-b border-neutral-400 h-14 mb-1"></div>
-              <span>Firma y DNI Conductor / Transportista</span>
+              <span>Conforme Conductor / Transportista (DNI y Firma)</span>
             </div>
           </div>
 
@@ -498,7 +486,7 @@
   <script>
     let palletGroups = [];
     let items = [];
-    let freightMode = 'ftl'; // 'ftl' (camión completo) o 'ltl' (grupaje)
+    let freightMode = 'ftl';
 
     const form = document.getElementById('pallet-form');
     const truckLenInput = document.getElementById('truck-length');
@@ -532,7 +520,6 @@
       if (color) document.getElementById('p-color').value = color;
     }
 
-    // Navegación entre pestañas
     function switchTab(tab) {
       const viewPlanner = document.getElementById('view-planner');
       const viewQuote = document.getElementById('view-quote');
@@ -576,7 +563,6 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Fecha actual en la hoja
       const today = new Date();
       document.getElementById('print-date').innerText = `Fecha: ${today.toLocaleDateString('es-ES')}`;
       render();
@@ -605,9 +591,7 @@
     });
 
     [truckLenInput, truckWidInput, truckMaxWeightInput, ratioLdmInput].forEach(inp => {
-      inp.addEventListener('input', () => {
-        render();
-      });
+      inp.addEventListener('input', render);
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
@@ -711,11 +695,7 @@
         isOverlapping(snappedX, snappedY, len, wid, other.x, other.y, other.length, other.width)
       );
 
-      return {
-        valid: !collides,
-        x: snappedX,
-        y: snappedY
-      };
+      return { valid: !collides, x: snappedX, y: snappedY };
     }
 
     function rotateItem(itemId) {
@@ -727,7 +707,7 @@
       const newWid = item.length;
 
       if (newWid > truckW + 0.01) {
-        showToast(`Imposible girar: el ancho (${newWid.toFixed(2)}m) supera el ancho del camión (${truckW.toFixed(2)}m).`);
+        showToast(`Imposible girar: el ancho (${newWid.toFixed(2)}m) supera el ancho del camión.`);
         return;
       }
 
@@ -850,7 +830,6 @@
         });
       }
 
-      // Totales
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
       const totalPhysicalLDM = trucksData.reduce((acc, t) => acc + t.physicalLDM, 0);
@@ -864,7 +843,6 @@
       document.getElementById('tot-ldm-chargeable').innerText = `${totalChargeableLDM.toFixed(2)} LDM`;
       document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Camión' : 'Camiones'}`;
 
-      // Lista lateral
       const groupList = document.getElementById('pallet-group-list');
       if (palletGroups.length === 0) {
         groupList.innerHTML = `<p class="text-neutral-400 italic text-center py-3">El camión está vacío.</p>`;
@@ -891,7 +869,6 @@
         }).join('');
       }
 
-      // Render Camiones
       const container = document.getElementById('trucks-container');
       container.innerHTML = '';
 
@@ -1101,10 +1078,69 @@
     }
 
     // ==========================================
-    // MOTOR DE COTIZACIÓN Y GENERADOR HOJA DE RUTA
+    // FUNCIÓN: CONSULTA AUTOMÁTICA DE KM
+    // ==========================================
+    async function fetchRouteDistance() {
+      const origin = document.getElementById('route-origin').value.trim();
+      const dest = document.getElementById('route-destination').value.trim();
+      const icon = document.getElementById('refresh-icon');
+      const text = document.getElementById('refresh-text');
+
+      if (!origin || !dest) {
+        showToast('Indica origen y destino para calcular los km.');
+        updateQuotation();
+        return;
+      }
+
+      icon.classList.add('fa-spin');
+      text.innerText = 'Calculando...';
+
+      try {
+        // 1. Geocodificación libre con Nominatim / OpenStreetMap
+        const [resOri, resDes] = await Promise.all([
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origin)}`),
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dest)}`)
+        ]);
+
+        const dataOri = await resOri.json();
+        const dataDes = await resDes.json();
+
+        if (!dataOri.length || !dataDes.length) {
+          throw new Error('No se encontraron coordenadas precisas para una de las direcciones.');
+        }
+
+        const lon1 = dataOri[0].lon;
+        const lat1 = dataOri[0].lat;
+        const lon2 = dataDes[0].lon;
+        const lat2 = dataDes[0].lat;
+
+        // 2. Ruta por carretera real con OSRM gratuito
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+        const resRoute = await fetch(osrmUrl);
+        const dataRoute = await resRoute.json();
+
+        if (dataRoute.routes && dataRoute.routes.length > 0) {
+          const meters = dataRoute.routes[0].distance;
+          const calculatedKm = Math.round(meters / 1000);
+          document.getElementById('ftl-km').value = calculatedKm;
+          showToast(`Ruta calculada: ${calculatedKm} km por carretera.`);
+        } else {
+          throw new Error('No se pudo calcular la ruta por carretera.');
+        }
+
+      } catch (err) {
+        showToast('Ruta refrescada. Puedes ajustar los km manualmente.');
+      } finally {
+        icon.classList.remove('fa-spin');
+        text.innerText = 'Refrescar & Calcular Ruta';
+        updateQuotation();
+      }
+    }
+
+    // ==========================================
+    // LIQUIDACIÓN ECONÓMICA Y GENERADOR PDF
     // ==========================================
     function updateQuotation() {
-      // 1. Textos de Cabecera
       const origin = document.getElementById('route-origin').value;
       const dest = document.getElementById('route-destination').value;
       const ref = document.getElementById('route-reference').value;
@@ -1113,12 +1149,10 @@
       document.getElementById('preview-dest').innerText = dest || '-';
       document.getElementById('preview-ref').innerText = ref || '-';
 
-      // 2. Métricas de carga
       const ratioLdm = parseNum(ratioLdmInput.value, 1750);
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
 
-      // Calcular LDM ocupados
       let maxReach = 0;
       items.forEach(it => {
         const reach = it.x + it.length;
@@ -1133,37 +1167,26 @@
       document.getElementById('preview-total-ldm-phys').innerText = `${physicalLdm.toFixed(2)} m`;
       document.getElementById('preview-total-ldm-chrg').innerText = `${chargeableLdm.toFixed(2)} m`;
 
-      // 3. Cálculos Financieros
-      let driverCost = 0;
-      let extrasCost = 0;
+      let totalCost = 0;
       let finalPrice = 0;
-      let marginAmount = 0;
-      let marginPct = 0;
+      let marginProfit = 0;
+      let marginNetPct = 0;
 
       if (freightMode === 'ftl') {
-        // Modo FTL: Distancia km * 1.25€/km + 15% margen (para neto >= 12.5%)
         const km = parseNum(document.getElementById('ftl-km').value, 600);
         const driverRate = parseNum(document.getElementById('ftl-driver-rate').value, 1.25);
         const markupPct = parseNum(document.getElementById('ftl-markup-pct').value, 15.0);
         const extras = parseNum(document.getElementById('ftl-extras').value, 0);
 
-        driverCost = km * driverRate;
-        extrasCost = extras;
-        const totalBaseCost = driverCost + extrasCost;
+        const driverCost = km * driverRate;
+        totalCost = driverCost + extras;
 
-        // Venta = Coste * (1 + markup/100)
-        finalPrice = totalBaseCost * (1 + (markupPct / 100));
-        marginAmount = finalPrice - totalBaseCost;
-        marginPct = finalPrice > 0 ? (marginAmount / finalPrice) * 100 : 0;
+        finalPrice = totalCost * (1 + (markupPct / 100));
+        marginProfit = finalPrice - totalCost;
+        marginNetPct = finalPrice > 0 ? (marginProfit / finalPrice) * 100 : 0;
 
-        document.getElementById('preview-mode-desc').innerText = `Camión Completo (FTL) - ${km} km @ ${driverRate.toFixed(2)} €/km`;
-        document.getElementById('preview-cost-driver').innerText = `${driverCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-        document.getElementById('preview-cost-extras').innerText = `${extrasCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-        document.getElementById('preview-margin-pct').innerText = `+${markupPct.toFixed(1)}% sobre coste (Beneficio neto: ${marginAmount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € | Margen: ${marginPct.toFixed(1)}%)`;
-        document.getElementById('preview-recommended-price').innerText = `${finalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
-
+        document.getElementById('preview-mode-desc').innerText = `Camión Completo (FTL) - ${km} km`;
       } else {
-        // Modo LTL (Grupaje): (LDM * tarifa) + 550€ fijo + % diésel + paradas extra
         const basePerLdm = parseNum(document.getElementById('ltl-base-per-ldm').value, 100);
         const fixedFee = parseNum(document.getElementById('ltl-fixed-fee').value, 550);
         const dieselPct = parseNum(document.getElementById('ltl-diesel-pct').value, 12.0);
@@ -1173,25 +1196,26 @@
         const subtotal = ldmCost + fixedFee + extraStop;
         const dieselFee = subtotal * (dieselPct / 100);
 
-        driverCost = fixedFee;
-        extrasCost = dieselFee + extraStop;
+        totalCost = fixedFee + extraStop;
         finalPrice = subtotal + dieselFee;
-        marginAmount = ldmCost; // En grupaje la aportación al margen reside en la consolidación de LDM
+        marginProfit = finalPrice - totalCost;
+        marginNetPct = finalPrice > 0 ? (marginProfit / finalPrice) * 100 : 0;
 
         document.getElementById('preview-mode-desc').innerText = `Grupaje / Partidas (LTL) - ${chargeableLdm.toFixed(2)} LDM`;
-        document.getElementById('preview-cost-driver').innerText = `Base Fija: ${fixedFee.toFixed(2)} € + LDM: ${ldmCost.toFixed(2)} €`;
-        document.getElementById('preview-cost-extras').innerText = `Diésel (+${dieselPct}%): ${dieselFee.toFixed(2)} € ${extraStop > 0 ? `+ Extras: ${extraStop.toFixed(2)} €` : ''}`;
-        document.getElementById('preview-margin-pct').innerText = `Consolidación de LDM en ruta compartida`;
-        document.getElementById('preview-recommended-price').innerText = `${finalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
       }
 
-      // 4. Tabla de Partidas en el PDF
+      document.getElementById('calc-internal-cost').innerText = `${totalCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+      document.getElementById('calc-internal-profit').innerText = `+${marginProfit.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+      document.getElementById('calc-internal-margin').innerText = `${marginNetPct.toFixed(1)}% neto`;
+
+      document.getElementById('preview-recommended-price').innerText = `${finalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € + IVA`;
+
       const tableBody = document.getElementById('preview-items-table');
       if (palletGroups.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-neutral-400 italic">No hay partidas de mercancía registradas</td></tr>`;
       } else {
         tableBody.innerHTML = palletGroups.map(g => {
-          const physL = (g.length * g.qty) / 2; // estimación física
+          const physL = (g.length * g.qty) / 2;
           const chrgL = Math.max(physL, (g.qty * g.weight) / ratioLdm);
           return `
             <tr>
