@@ -11,9 +11,9 @@
       background: repeating-linear-gradient(
         0deg,
         #f8fafc,
-        #f8fafc 20px,
-        #f1f5f9 20px,
-        #f1f5f9 40px
+        #f8fafc 15px,
+        #f1f5f9 15px,
+        #f1f5f9 30px
       );
     }
   </style>
@@ -28,7 +28,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold leading-tight">Calculadora LDM Pro</h1>
-          <p class="text-xs text-slate-400">Planificador multi-camión y control de carga</p>
+          <p class="text-xs text-slate-400">Planificador multi-camión (13.60 × 2.44 m) y control de peso</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -51,15 +51,15 @@
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div>
             <label class="block text-slate-500 mb-1">Largo útil (m)</label>
-            <input type="number" id="truck-length" value="13.60" step="0.1" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
+            <input type="text" id="truck-length" value="13.60" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
           </div>
           <div>
             <label class="block text-slate-500 mb-1">Ancho útil (m)</label>
-            <input type="number" id="truck-width" value="2.40" step="0.05" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
+            <input type="text" id="truck-width" value="2.44" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
           </div>
           <div class="col-span-2">
             <label class="block text-slate-500 mb-1">Carga máxima útil por camión (kg)</label>
-            <input type="number" id="truck-max-weight" value="24000" step="100" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
+            <input type="text" id="truck-max-weight" value="24000" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@
           <i class="fa-solid fa-boxes-stacked text-blue-600"></i> Añadir Mercancía
         </h2>
         
-        <!-- Botones de plantilla rápida -->
+        <!-- Presets -->
         <div class="grid grid-cols-3 gap-2 mb-3">
           <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé')" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
             <div class="font-bold">Europeo</div>
@@ -93,28 +93,28 @@
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-500 mb-1">Largo (m)</label>
-              <input type="number" id="p-length" value="1.20" step="0.01" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
+              <label class="block text-slate-500 mb-1">Largo longitudinal (m)</label>
+              <input type="text" id="p-length" value="1.20" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
             </div>
             <div>
-              <label class="block text-slate-500 mb-1">Ancho (m)</label>
-              <input type="number" id="p-width" value="0.80" step="0.01" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
+              <label class="block text-slate-500 mb-1">Ancho transversal (m)</label>
+              <input type="text" id="p-width" value="0.80" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-500 mb-1">Cantidad</label>
-              <input type="number" id="p-qty" value="33" min="1" max="200" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
+              <input type="number" id="p-qty" value="33" min="1" max="250" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
             </div>
             <div>
               <label class="block text-slate-500 mb-1">Peso unitario (kg)</label>
-              <input type="number" id="p-weight" value="500" min="0" step="10" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
+              <input type="text" id="p-weight" value="500" class="w-full border rounded px-2.5 py-1.5 focus:outline-blue-500" required />
             </div>
           </div>
           <div>
             <label class="block text-slate-500 mb-1">Color de etiqueta</label>
             <div class="flex gap-2">
-              <input type="color" id="p-color" value="#3b82f6" class="h-8 w-14 rounded border cursor-pointer p-0.5" />
+              <input type="color" id="p-color" value="#2563eb" class="h-8 w-14 rounded border cursor-pointer p-0.5" />
               <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded px-4 py-2 text-xs transition shadow-sm">
                 <i class="fa-solid fa-plus mr-1"></i> Añadir a la lista
               </button>
@@ -123,7 +123,7 @@
         </form>
       </div>
 
-      <!-- Resumen Global de Expedición -->
+      <!-- Resumen Global -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center justify-between">
           <span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-blue-600"></i> Totales de Expedición</span>
@@ -139,7 +139,7 @@
             <span id="tot-weight" class="text-lg font-bold text-slate-800">0 kg</span>
           </div>
           <div class="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
-            <span class="text-[11px] text-blue-700 block">LDM Teórico Convencional</span>
+            <span class="text-[11px] text-blue-700 block">LDM Teórico (Superficie/2.4)</span>
             <span id="tot-ldm-theor" class="text-lg font-bold text-blue-900">0.00 m</span>
           </div>
           <div class="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
@@ -149,45 +149,48 @@
         </div>
       </div>
 
-      <!-- Lista de grupos cargados -->
+      <!-- Partidas -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <h2 class="text-sm font-semibold text-slate-700 mb-2">Partidas Introducidas</h2>
-        <div id="pallet-group-list" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1">
-          <!-- Inyectado por JS -->
-        </div>
+        <div id="pallet-group-list" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
       </div>
     </div>
 
-    <!-- Panel Derecho: Visualizador de Camiones 2D -->
+    <!-- Panel Derecho: Visualizador -->
     <div class="lg:col-span-8 space-y-6">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div class="text-xs text-slate-500">
-          <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> Haz clic en cualquier palé para <strong>girarlo 90°</strong>. Si el camión supera los 13.6 m o el límite de kg, se genera otro automáticamente.
+          <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>
+          Haz clic sobre cualquier palé para <strong>girarlo 90°</strong>. En ancho 2.44m caben 3 europalés a 0.80m (3×0.80=2.40m) o 2 a 1.20m (2×1.20=2.40m).
         </div>
         <div class="flex gap-2">
           <button id="btn-rotate-all" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-medium text-slate-700 transition">
-            <i class="fa-solid fa-arrows-rotate mr-1"></i> Girar todos
+            <i class="fa-solid fa-arrows-rotate mr-1"></i> Girar todos (90°)
           </button>
         </div>
       </div>
 
-      <!-- Contenedor dinámico de camiones -->
-      <div id="trucks-container" class="space-y-6">
-        <!-- Tarjetas de cada camión inyectadas dinámicamente -->
-      </div>
+      <!-- Camiones renderizados -->
+      <div id="trucks-container" class="space-y-6"></div>
     </div>
   </main>
 
   <script>
-    // Estado de la app
     let palletGroups = [];
-    let items = []; // lista expandida de palés individuales
+    let items = [];
 
-    // Dimensiones iniciales
     const form = document.getElementById('pallet-form');
     const truckLenInput = document.getElementById('truck-length');
     const truckWidInput = document.getElementById('truck-width');
     const truckMaxWeightInput = document.getElementById('truck-max-weight');
+
+    function parseNum(val, defaultVal = 0) {
+      if (typeof val === 'number') return val;
+      if (!val) return defaultVal;
+      const clean = val.toString().replace(',', '.');
+      const parsed = parseFloat(clean);
+      return isNaN(parsed) ? defaultVal : parsed;
+    }
 
     function setPreset(l, w, name) {
       document.getElementById('p-length').value = l.toFixed(2);
@@ -195,19 +198,19 @@
       document.getElementById('p-name').value = name;
     }
 
-    // Inicializar con 33 Europalés típicos
     window.addEventListener('DOMContentLoaded', () => {
-      addPalletBatch('Europalé', 1.20, 0.80, 33, 500, '#3b82f6');
+      // 33 Europalés estándar (1.20m largo x 0.80m ancho)
+      addPalletBatch('Europalé', 1.20, 0.80, 33, 500, '#2563eb');
       render();
     });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('p-name').value;
-      const length = parseFloat(document.getElementById('p-length').value);
-      const width = parseFloat(document.getElementById('p-width').value);
-      const qty = parseInt(document.getElementById('p-qty').value);
-      const weight = parseFloat(document.getElementById('p-weight').value);
+      const length = parseNum(document.getElementById('p-length').value, 1.2);
+      const width = parseNum(document.getElementById('p-width').value, 0.8);
+      const qty = parseInt(document.getElementById('p-qty').value) || 1;
+      const weight = parseNum(document.getElementById('p-weight').value, 500);
       const color = document.getElementById('p-color').value;
 
       addPalletBatch(name, length, width, qty, weight, color);
@@ -245,8 +248,7 @@
           length,
           width,
           weight,
-          color,
-          rotated: false
+          color
         });
       }
     }
@@ -267,34 +269,30 @@
       }
     }
 
-    // Algoritmo de empaquetado 2D First-Fit Shelf con límites de LDM y peso
     function calculateDistribution() {
-      const truckL = parseFloat(truckLenInput.value) || 13.6;
-      const truckW = parseFloat(truckWidInput.value) || 2.4;
-      const maxWeight = parseFloat(truckMaxWeightInput.value) || 24000;
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
 
       const trucks = [];
       let currentTruck = createTruck(1, truckL, truckW, maxWeight);
 
-      // Fila actual en el camión
-      let currentShelfY = 0; // Coordenada X longitudinal del camión (0 -> 13.6)
-      let currentShelfX = 0; // Coordenada Y transversal (0 -> 2.4)
+      let currentShelfY = 0; // Posición longitudinal (0 -> 13.6m)
+      let currentShelfX = 0; // Posición transversal (0 -> 2.44m)
       let currentShelfThickness = 0;
 
-      items.forEach((item, index) => {
-        const itemLen = item.length; // a lo largo del camión
-        const itemWid = item.width;  // a lo ancho del camión
+      items.forEach((item) => {
+        const itemLen = item.length; // a lo largo
+        const itemWid = item.width;  // a lo ancho
 
-        // Comprobación si cabe en el ancho de la fila actual
-        const fitsInCurrentShelf = (currentShelfX + itemWid <= truckW + 0.01);
+        // ¿Cabe en el ancho transversal restante de la fila actual?
+        const fitsInCurrentShelf = (currentShelfX + itemWid <= truckW + 0.02);
 
         if (fitsInCurrentShelf) {
-          // Comprobar si al colocarlo no excedería la longitud total del camión o el peso
-          const wouldExceedLength = (currentShelfY + Math.max(currentShelfThickness, itemLen) > truckL + 0.01);
+          const wouldExceedLength = (currentShelfY + Math.max(currentShelfThickness, itemLen) > truckL + 0.02);
           const wouldExceedWeight = (currentTruck.currentWeight + item.weight > maxWeight);
 
           if (wouldExceedLength || wouldExceedWeight) {
-            // Abrir nuevo camión
             trucks.push(finalizeTruck(currentTruck));
             currentTruck = createTruck(trucks.length + 1, truckL, truckW, maxWeight);
             currentShelfY = 0;
@@ -302,13 +300,12 @@
             currentShelfThickness = 0;
           }
         } else {
-          // Salto a la siguiente fila longitudinal
+          // Salta a la siguiente fila longitudinal
           currentShelfY += currentShelfThickness;
           currentShelfX = 0;
           currentShelfThickness = 0;
 
-          // Comprobar si entra longitudinalmente o si supera peso en un nuevo estante
-          const wouldExceedLength = (currentShelfY + itemLen > truckL + 0.01);
+          const wouldExceedLength = (currentShelfY + itemLen > truckL + 0.02);
           const wouldExceedWeight = (currentTruck.currentWeight + item.weight > maxWeight);
 
           if (wouldExceedLength || wouldExceedWeight) {
@@ -320,7 +317,6 @@
           }
         }
 
-        // Colocar palé
         currentTruck.placements.push({
           item,
           x: currentShelfX,
@@ -367,7 +363,6 @@
       });
 
       truck.usedLDM = maxReach;
-      // Fórmula de LDM estándar = Superficie ocupada (m²) / 2.40 m
       truck.theoreticalLDM = totalArea / 2.4;
       return truck;
     }
@@ -375,7 +370,6 @@
     function render() {
       const trucks = calculateDistribution();
 
-      // Render Totales
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
       const totalRealLdm = trucks.reduce((acc, t) => acc + t.usedLDM, 0);
@@ -387,7 +381,6 @@
       document.getElementById('tot-ldm-theor').innerText = `${totalTheorLdm.toFixed(2)} m`;
       document.getElementById('badge-trucks').innerText = `${trucks.length} ${trucks.length === 1 ? 'Camión' : 'Camiones'}`;
 
-      // Render Lista de Grupos
       const groupList = document.getElementById('pallet-group-list');
       if (palletGroups.length === 0) {
         groupList.innerHTML = `<p class="text-slate-400 italic text-center py-2">Sin mercancía añadida</p>`;
@@ -408,7 +401,6 @@
         `).join('');
       }
 
-      // Render Camiones y Gráficos
       const container = document.getElementById('trucks-container');
       container.innerHTML = '';
 
@@ -441,11 +433,11 @@
             </div>
           </div>
 
-          <!-- Barras de Progreso (LDM y Peso) -->
+          <!-- Progreso -->
           <div class="grid grid-cols-2 gap-4 mb-4 text-[11px]">
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-500">Ocupación Longitudinal</span>
+                <span class="text-slate-500">Ocupación Longitudinal (13.60 m)</span>
                 <span class="font-semibold text-slate-700">${ldmPct.toFixed(1)}%</span>
               </div>
               <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -454,7 +446,7 @@
             </div>
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-500">Capacidad de Carga Útil</span>
+                <span class="text-slate-500">Carga Útil (${truck.maxWeight.toLocaleString('es-ES')} kg)</span>
                 <span class="font-semibold ${weightPct >= 100 ? 'text-rose-600 font-bold' : 'text-slate-700'}">${weightPct.toFixed(1)}%</span>
               </div>
               <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -463,53 +455,63 @@
             </div>
           </div>
 
-          <!-- Plano 2D del Remolque -->
-          <div class="relative overflow-x-auto pb-4">
-            <div class="min-w-[700px]">
-              <!-- Regla de LDM -->
-              <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-1 px-8">
+          <!-- Plano 2D Escala Real con Reglas X e Y -->
+          <div class="overflow-x-auto pb-2">
+            <div class="min-w-[760px]">
+              <!-- Regla Superior de Longitud (X) -->
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono mb-1 pl-14 pr-2">
                 <span>0.0 m (Cabina)</span>
                 <span>3.4 m</span>
                 <span>6.8 m</span>
                 <span>10.2 m</span>
-                <span>13.6 m (Puerta)</span>
+                <span>${truck.maxL.toFixed(2)} m (Puerta)</span>
               </div>
 
-              <!-- Contenedor del remolque con marco -->
-              <div class="relative border-4 border-slate-700 rounded-lg bg-slate-100 truck-canvas" style="height: 220px; width: 100%;">
-                
-                <!-- Cota visual de LDM ocupados -->
-                <div class="absolute top-0 bottom-0 left-0 bg-blue-500/10 border-r-2 border-blue-500 pointer-events-none transition-all duration-300 z-10"
-                     style="width: ${(truck.usedLDM / truck.maxL) * 100}%">
-                  <span class="absolute top-1 right-1.5 bg-blue-600 text-white text-[10px] font-mono px-1 rounded shadow">
-                    ${truck.usedLDM.toFixed(2)} m LDM
-                  </span>
+              <div class="flex items-stretch">
+                <!-- Regla Lateral de Anchura (Y) -->
+                <div class="w-14 flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2 text-right select-none py-1">
+                  <span>0.0 m</span>
+                  <span>0.80 m</span>
+                  <span>1.60 m</span>
+                  <span>${truck.maxW.toFixed(2)} m</span>
                 </div>
 
-                <!-- Palés renderizados -->
-                <div class="absolute inset-0">
-                  ${truck.placements.map(p => {
-                    const left = (p.y / truck.maxL) * 100;
-                    const top = (p.x / truck.maxW) * 100;
-                    const width = (p.l / truck.maxL) * 100;
-                    const height = (p.w / truck.maxW) * 100;
+                <!-- Caja del Remolque -->
+                <div class="relative flex-1 border-4 border-slate-700 rounded-lg bg-slate-100 truck-canvas" style="height: 175px;">
+                  
+                  <!-- Cota de LDM ocupados -->
+                  <div class="absolute top-0 bottom-0 left-0 bg-blue-500/10 border-r-2 border-blue-600 pointer-events-none transition-all duration-300 z-10"
+                       style="width: ${(truck.usedLDM / truck.maxL) * 100}%">
+                    <span class="absolute top-1 right-1.5 bg-blue-600 text-white text-[10px] font-mono px-1 rounded shadow">
+                      ${truck.usedLDM.toFixed(2)} m LDM
+                    </span>
+                  </div>
 
-                    return `
-                      <div onclick="rotateItem('${p.item.id}')"
-                           title="${p.item.name}: ${p.l.toFixed(2)}x${p.w.toFixed(2)}m, ${p.item.weight} kg (Haz clic para girar)"
-                           class="absolute flex flex-col items-center justify-center cursor-pointer select-none transition-transform hover:scale-[1.02] hover:z-20 border border-black/20 text-white font-medium shadow-sm overflow-hidden"
-                           style="
-                             left: ${left}%;
-                             top: ${top}%;
-                             width: ${width}%;
-                             height: ${height}%;
-                             background-color: ${p.item.color};
-                           ">
-                        <span class="text-[10px] font-bold leading-none truncate px-0.5">${p.l.toFixed(2)}×${p.w.toFixed(2)}</span>
-                        <span class="text-[9px] opacity-80 leading-none mt-0.5">${p.item.weight}kg</span>
-                      </div>
-                    `;
-                  }).join('')}
+                  <!-- Línea de cota máxima 2.44m de ancho de referencia -->
+                  <div class="absolute inset-0">
+                    ${truck.placements.map(p => {
+                      const left = (p.y / truck.maxL) * 100;
+                      const top = (p.x / truck.maxW) * 100;
+                      const width = (p.l / truck.maxL) * 100;
+                      const height = (p.w / truck.maxW) * 100;
+
+                      return `
+                        <div onclick="rotateItem('${p.item.id}')"
+                             title="${p.item.name}: Largo ${p.l.toFixed(2)}m × Ancho ${p.w.toFixed(2)}m (${p.item.weight} kg) - Clic para girar 90°"
+                             class="absolute flex flex-col items-center justify-center cursor-pointer select-none transition-transform hover:scale-[1.02] hover:z-20 border border-black/30 text-white font-medium shadow-sm overflow-hidden"
+                             style="
+                               left: ${left}%;
+                               top: ${top}%;
+                               width: ${width}%;
+                               height: ${height}%;
+                               background-color: ${p.item.color};
+                             ">
+                          <span class="text-[10px] font-bold leading-none truncate px-0.5">${p.l.toFixed(2)}×${p.w.toFixed(2)}m</span>
+                          <span class="text-[9px] opacity-90 leading-none mt-0.5">${p.item.weight}kg</span>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
                 </div>
               </div>
             </div>
