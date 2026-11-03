@@ -3,244 +3,222 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RLC Transport Solutions | Planificador LDM & Estiba</title>
+  <title>Planificador LDM & Estiba de Carga</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            rlc: {
-              navy: '#0B1E36',       // Azul marino corporativo profundo
-              navyLight: '#132F54',  // Azul marino secundario
-              blue: '#0072CE',       // Azul transporte RLC
-              cyan: '#00A8E8',       // Cian de realce y acento
-              slate: '#F1F5F9',
-              border: '#CBD5E1',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
     .truck-deck {
-      background-color: #f8fafc;
-      background-size: 24px 24px;
+      background-color: #ffffff;
+      background-size: 20px 20px;
       background-image: 
-        linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
+        linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+        linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
     }
     .pallet-card {
-      box-shadow: 0 2px 4px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
     .pallet-card:hover {
-      box-shadow: 0 4px 10px rgba(0, 168, 232, 0.35);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
       z-index: 30 !important;
     }
   </style>
 </head>
-<body class="bg-slate-100/80 min-h-screen text-slate-800 antialiased font-sans">
+<body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased">
   
-  <!-- Barra de navegación corporativa RLC -->
-  <header class="bg-rlc-navy border-b border-rlc-navyLight shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <!-- Cabecera Negro / Rojo / Blanco -->
+  <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-50 px-4 py-2.5 shadow-md">
+    <div class="w-full flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Logo Badge RLC -->
-        <div class="bg-gradient-to-br from-rlc-blue to-rlc-cyan text-white font-extrabold text-xl tracking-tighter px-3 py-1.5 rounded-lg shadow-inner flex items-center gap-1.5">
-          <span>RLC</span>
-          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+        <div class="bg-red-600 text-white font-extrabold text-lg px-2.5 py-1 rounded tracking-tighter flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-truck-ramp-box"></i>
         </div>
-        <div class="border-l border-slate-700 pl-3">
-          <h1 class="text-white text-sm font-bold tracking-tight">Rau Load Cargo S.L.</h1>
-          <p class="text-[11px] text-rlc-cyan font-medium">Gestor Inteligente de Estiba & Cálculo de LDM</p>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">Planificador de Estiba & Calculadora LDM</h1>
+          <p class="text-[11px] text-neutral-400 font-mono">1 LDM = 1.750 kg | Dimensiones reales 13.60 × 2.44 m</p>
         </div>
       </div>
       
-      <div class="flex items-center gap-2">
-        <span class="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-300 bg-rlc-navyLight/60 px-3 py-1.5 rounded-md border border-slate-700 font-medium">
-          <i class="fa-solid fa-shield-halved text-rlc-cyan"></i> Ratio Estándar: 1 LDM = 1.750 kg
-        </span>
-        <button id="btn-reset" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-md border border-slate-700 transition flex items-center gap-1.5">
-          <i class="fa-solid fa-arrow-rotate-left"></i> <span>Limpiar</span>
+      <div class="flex items-center gap-3">
+        <button id="btn-reset" class="text-xs bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-3 py-1.5 rounded border border-neutral-700 hover:border-red-600 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can text-red-500"></i> <span>Limpiar Todo</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Cuerpo de la aplicación -->
-  <main class="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- Contenedor Pantalla Completa (Full Width) -->
+  <main class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4">
     
-    <!-- Columna Lateral de Configuración y Carga (4 cols) -->
-    <div class="lg:col-span-4 space-y-5">
+    <!-- Columna Lateral Izquierda (3 columnas en pantallas grandes) -->
+    <div class="xl:col-span-3 space-y-4">
       
-      <!-- Parámetros del Camión -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-          <h2 class="text-xs font-bold text-rlc-navy uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-truck-ramp-box text-rlc-blue"></i> Configuración de Semirremolque
+      <!-- Parámetros Semirremolque -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
+          <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-600"></span> Parámetros del Tráiler
           </h2>
-          <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-semibold">Tautliner 13.6</span>
+          <span class="text-[10px] bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded font-mono font-bold">13.6 m</span>
         </div>
-        <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="grid grid-cols-2 gap-2 text-xs">
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Largo útil (m)</label>
-            <input type="text" id="truck-length" value="13.60" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-rlc-blue focus:outline-none focus:ring-1 focus:ring-rlc-blue" />
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Largo útil (m)</label>
+            <input type="text" id="truck-length" value="13.60" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-neutral-800 bg-neutral-50 focus:bg-white focus:border-red-600 focus:outline-none" />
           </div>
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Ancho útil (m)</label>
-            <input type="text" id="truck-width" value="2.44" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-rlc-blue focus:outline-none focus:ring-1 focus:ring-rlc-blue" />
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Ancho útil (m)</label>
+            <input type="text" id="truck-width" value="2.44" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-neutral-800 bg-neutral-50 focus:bg-white focus:border-red-600 focus:outline-none" />
           </div>
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Carga Máxima (kg)</label>
-            <input type="text" id="truck-max-weight" value="24000" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-rlc-blue focus:outline-none focus:ring-1 focus:ring-rlc-blue" />
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Carga Máx. (kg)</label>
+            <input type="text" id="truck-max-weight" value="24000" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-neutral-800 bg-neutral-50 focus:bg-white focus:border-red-600 focus:outline-none" />
           </div>
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Ratio kg / LDM</label>
-            <input type="text" id="ratio-ldm" value="1750" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-rlc-blue focus:outline-none focus:ring-1 focus:ring-rlc-blue" />
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Ratio kg / LDM</label>
+            <input type="text" id="ratio-ldm" value="1750" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-neutral-800 bg-neutral-50 focus:bg-white focus:border-red-600 focus:outline-none" />
           </div>
         </div>
       </div>
 
-      <!-- Añadir Bultos -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
-        <h2 class="text-xs font-bold text-rlc-navy uppercase tracking-wider mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-dolly text-rlc-blue"></i> Incorporar Mercancía
+      <!-- Añadir Mercancía -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <h2 class="text-xs font-bold text-black uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-red-600"></span> Añadir Bultos
         </h2>
 
-        <!-- Plantillas directas -->
-        <div class="grid grid-cols-3 gap-2 mb-3">
-          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500, '#0072CE')" class="border border-slate-200 hover:border-rlc-blue hover:bg-blue-50/50 rounded-lg p-2 text-center text-xs transition group">
-            <div class="font-bold text-slate-700 group-hover:text-rlc-blue">Europalé</div>
-            <div class="text-[10px] text-slate-500 font-mono">1.2 × 0.8 m</div>
+        <!-- Presets -->
+        <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500, '#000000')" class="border border-neutral-200 hover:border-red-600 hover:bg-neutral-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-neutral-800 text-[11px]">Europalé</div>
+            <div class="text-[9px] text-neutral-500 font-mono">1.2 × 0.8m</div>
           </button>
-          <button type="button" onclick="setPreset(1.20, 1.00, 'Americano', 600, '#0B1E36')" class="border border-slate-200 hover:border-rlc-blue hover:bg-blue-50/50 rounded-lg p-2 text-center text-xs transition group">
-            <div class="font-bold text-slate-700 group-hover:text-rlc-blue">Americano</div>
-            <div class="text-[10px] text-slate-500 font-mono">1.2 × 1.0 m</div>
+          <button type="button" onclick="setPreset(1.20, 1.00, 'Americano', 600, '#374151')" class="border border-neutral-200 hover:border-red-600 hover:bg-neutral-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-neutral-800 text-[11px]">Americano</div>
+            <div class="text-[9px] text-neutral-500 font-mono">1.2 × 1.0m</div>
           </button>
-          <button type="button" onclick="setPreset(5.00, 2.00, 'Maquinaria', 12000, '#D97706')" class="border border-slate-200 hover:border-amber-500 hover:bg-amber-50/50 rounded-lg p-2 text-center text-xs transition group">
-            <div class="font-bold text-amber-800">Pieza 12t</div>
-            <div class="text-[10px] text-slate-500 font-mono">5.0 × 2.0 m</div>
+          <button type="button" onclick="setPreset(5.00, 2.00, 'Pieza 12t', 12000, '#DC2626')" class="border border-neutral-200 hover:border-red-600 hover:bg-red-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-red-600 text-[11px]">Pieza 12t</div>
+            <div class="text-[9px] text-neutral-500 font-mono">5.0 × 2.0m</div>
           </button>
         </div>
 
-        <form id="pallet-form" class="space-y-3 text-xs">
+        <form id="pallet-form" class="space-y-2.5 text-xs">
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Descripción / Referencia</label>
-            <input type="text" id="p-name" value="Europalé" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 focus:border-rlc-blue focus:outline-none" required />
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Descripción</label>
+            <input type="text" id="p-name" value="Europalé" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" required />
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Largo longitudinal (m)</label>
-              <input type="text" id="p-length" value="1.20" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono focus:border-rlc-blue focus:outline-none" required />
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Largo (m)</label>
+              <input type="text" id="p-length" value="1.20" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
             </div>
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Ancho transversal (m)</label>
-              <input type="text" id="p-width" value="0.80" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono focus:border-rlc-blue focus:outline-none" required />
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Ancho (m)</label>
+              <input type="text" id="p-width" value="0.80" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Unidades</label>
-              <input type="number" id="p-qty" value="33" min="1" max="250" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono focus:border-rlc-blue focus:outline-none" required />
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Cantidad</label>
+              <input type="number" id="p-qty" value="33" min="1" max="250" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
             </div>
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Peso unitario (kg)</label>
-              <input type="text" id="p-weight" value="500" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono focus:border-rlc-blue focus:outline-none" required />
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Peso unitario (kg)</label>
+              <input type="text" id="p-weight" value="500" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
             </div>
           </div>
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Color representativo</label>
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Color</label>
             <div class="flex gap-2">
-              <input type="color" id="p-color" value="#0072CE" class="h-9 w-14 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
-              <button type="submit" class="flex-1 bg-gradient-to-r from-rlc-navy to-rlc-blue hover:from-rlc-navyLight hover:to-rlc-blue text-white font-semibold rounded-lg px-4 py-2 text-xs transition shadow-sm flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus text-[11px]"></i> Añadir a la expedición
+              <input type="color" id="p-color" value="#000000" class="h-8 w-12 rounded border border-neutral-300 cursor-pointer p-0.5" />
+              <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded px-3 py-1.5 text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-plus text-[10px]"></i> Añadir
               </button>
             </div>
           </div>
         </form>
       </div>
 
-      <!-- Resumen Global de Facturación -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-          <h2 class="text-xs font-bold text-rlc-navy uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-file-invoice-dollar text-rlc-blue"></i> Liquidación de Carga
+      <!-- Totales y Resumen -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
+          <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-calculator text-red-600"></i> Totales Expedición
           </h2>
-          <span id="badge-trucks" class="bg-rlc-navy text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full font-mono">1 Camión</span>
+          <span id="badge-trucks" class="bg-black text-white text-[11px] font-bold px-2 py-0.5 rounded font-mono">1 Camión</span>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 text-center mb-3">
-          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Bultos Totales</span>
-            <span id="tot-pallets" class="text-base font-extrabold text-slate-800 font-mono">0</span>
+        <div class="grid grid-cols-2 gap-2 text-center mb-2.5">
+          <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-500 font-semibold uppercase block">Bultos</span>
+            <span id="tot-pallets" class="text-sm font-extrabold text-black font-mono">0</span>
           </div>
-          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Peso Bruto Total</span>
-            <span id="tot-weight" class="text-base font-extrabold text-slate-800 font-mono">0 kg</span>
+          <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-500 font-semibold uppercase block">Peso Total</span>
+            <span id="tot-weight" class="text-sm font-extrabold text-black font-mono">0 kg</span>
           </div>
         </div>
 
-        <div class="bg-gradient-to-b from-slate-50 to-blue-50/40 p-3 rounded-lg border border-slate-200 space-y-2 text-xs">
-          <div class="flex justify-between items-center text-slate-600">
-            <span>LDM Suelo (Ocupación):</span>
-            <span id="tot-ldm-real" class="font-bold font-mono text-slate-800">0.00 m</span>
+        <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200 space-y-1.5 text-xs">
+          <div class="flex justify-between items-center text-neutral-600">
+            <span>LDM Suelo:</span>
+            <span id="tot-ldm-real" class="font-bold font-mono text-black">0.00 m</span>
           </div>
-          <div class="flex justify-between items-center text-slate-600">
-            <span>LDM Peso (Peso / 1.750):</span>
-            <span id="tot-ldm-weight" class="font-bold font-mono text-amber-700">0.00 m</span>
+          <div class="flex justify-between items-center text-neutral-600">
+            <span>LDM Peso (kg/1.750):</span>
+            <span id="tot-ldm-weight" class="font-bold font-mono text-red-600">0.00 m</span>
           </div>
-          <div class="flex justify-between items-center border-t border-slate-200 pt-2 text-rlc-navy">
-            <span class="font-extrabold text-xs uppercase tracking-tight">LDM Tasables Totales:</span>
-            <span id="tot-ldm-chargeable" class="font-mono text-lg font-extrabold text-rlc-blue">0.00 LDM</span>
+          <div class="flex justify-between items-center border-t border-neutral-200 pt-1.5 text-black">
+            <span class="font-extrabold text-xs uppercase">LDM Tasables:</span>
+            <span id="tot-ldm-chargeable" class="font-mono text-base font-extrabold text-red-600">0.00 LDM</span>
           </div>
         </div>
       </div>
 
-      <!-- Partidas Añadidas -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
-        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Partidas en Manifiesto</h2>
-        <div id="pallet-group-list" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
+      <!-- Partidas -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Partidas Introducidas</h2>
+        <div id="pallet-group-list" class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1"></div>
       </div>
     </div>
 
-    <!-- Columna Principal: Visualizador Gráfico y Contenedores 2D (8 cols) -->
-    <div class="lg:col-span-8 space-y-5">
+    <!-- Columna Principal Tráiler (9 columnas en pantallas grandes - Ocupa todo el espacio lateral) -->
+    <div class="xl:col-span-9 space-y-4">
       
-      <!-- Barra de herramientas superior -->
-      <div class="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-3 text-slate-600">
+      <!-- Barra Superior de Herramientas -->
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-4 text-neutral-700">
           <span class="flex items-center gap-1.5 font-medium">
-            <i class="fa-solid fa-arrows-rotate text-rlc-blue"></i> Clic en bulto: <strong>Girar 90°</strong>
+            <i class="fa-solid fa-arrows-rotate text-red-600"></i> Clic: <strong>Girar 90°</strong>
           </span>
-          <span class="hidden sm:inline text-slate-300">|</span>
+          <span class="text-neutral-300">|</span>
           <span class="flex items-center gap-1.5 font-medium">
-            <i class="fa-solid fa-up-down-left-right text-emerald-600"></i> Arrastrar: <strong>Recolocar</strong>
+            <i class="fa-solid fa-up-down-left-right text-black"></i> Arrastrar: <strong>Mover libremente</strong>
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btn-repack" class="bg-rlc-blue/10 hover:bg-rlc-blue/20 text-rlc-blue border border-rlc-blue/20 px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Optimizar
+          <button id="btn-repack" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3 py-1.5 rounded font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Ordenar
           </button>
-          <button id="btn-rotate-all" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+          <button id="btn-rotate-all" class="bg-neutral-100 hover:bg-neutral-200 text-black px-3 py-1.5 rounded font-bold transition flex items-center gap-1.5 border border-neutral-300">
             <i class="fa-solid fa-rotate"></i> Girar Todos
           </button>
         </div>
       </div>
 
-      <!-- Contenedor de camiones generados -->
-      <div id="trucks-container" class="space-y-6"></div>
+      <!-- Contenedor Dinámico de Camiones -->
+      <div id="trucks-container" class="space-y-4 w-full"></div>
     </div>
   </main>
 
@@ -271,8 +249,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // 33 Europalés típicos al iniciar
-      addPalletBatch('Europalé RLC', 1.20, 0.80, 33, 500, '#0072CE');
+      // 33 Europalés típicos iniciales
+      addPalletBatch('Europalé', 1.20, 0.80, 33, 500, '#000000');
       autoArrange();
       render();
     });
@@ -355,7 +333,6 @@
       }
     }
 
-    // Auto-organización con corte por longitud y carga máxima útil
     function autoArrange() {
       const truckL = parseNum(truckLenInput.value, 13.6);
       const truckW = parseNum(truckWidInput.value, 2.44);
@@ -459,28 +436,28 @@
       document.getElementById('tot-ldm-real').innerText = `${totalPhysicalLDM.toFixed(2)} m`;
       document.getElementById('tot-ldm-weight').innerText = `${totalWeightLDM.toFixed(2)} m`;
       document.getElementById('tot-ldm-chargeable').innerText = `${totalChargeableLDM.toFixed(2)} LDM`;
-      document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Vehículo' : 'Vehículos'}`;
+      document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Camión' : 'Camiones'}`;
 
-      // Lista de partidas en panel lateral
+      // Lista de partidas lateral
       const groupList = document.getElementById('pallet-group-list');
       if (palletGroups.length === 0) {
-        groupList.innerHTML = `<p class="text-slate-400 italic text-center py-3">No hay partidas cargadas</p>`;
+        groupList.innerHTML = `<p class="text-neutral-400 italic text-center py-2">Sin mercancía añadida</p>`;
       } else {
         groupList.innerHTML = palletGroups.map(g => {
           const partWeight = g.qty * g.weight;
           const partWeightLdm = partWeight / ratioLdm;
           return `
-            <div class="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-slate-50/80">
+            <div class="flex items-center justify-between p-1.5 rounded border border-neutral-200 bg-neutral-50">
               <div class="flex items-center gap-2">
-                <span class="w-3.5 h-3.5 rounded shadow-sm flex-shrink-0" style="background-color: ${g.color}"></span>
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${g.color}"></span>
                 <div>
-                  <span class="font-bold text-slate-700">${g.name}</span>
-                  <span class="text-[10px] text-slate-500 font-mono block">
-                    ${g.qty} uds | ${g.length}×${g.width}m | ${g.weight} kg (${partWeight.toLocaleString('es-ES')} kg = <strong>${partWeightLdm.toFixed(2)} LDM</strong>)
+                  <span class="font-bold text-neutral-800">${g.name}</span>
+                  <span class="text-[9px] text-neutral-500 font-mono block">
+                    ${g.qty} uds | ${g.length}×${g.width}m | ${g.weight} kg (${partWeightLdm.toFixed(2)} LDM peso)
                   </span>
                 </div>
               </div>
-              <button onclick="removeGroup(${g.id})" class="text-rose-400 hover:text-rose-600 p-1.5 transition">
+              <button onclick="removeGroup(${g.id})" class="text-red-500 hover:text-red-700 p-1">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
@@ -488,7 +465,7 @@
         }).join('');
       }
 
-      // Render Camiones Estilo Remolque RLC
+      // Render Camiones Formato Tráiler Extendido
       const container = document.getElementById('trucks-container');
       container.innerHTML = '';
 
@@ -497,129 +474,123 @@
         const ldmPct = Math.min(100, (truck.physicalLDM / truckL) * 100);
 
         const card = document.createElement('div');
-        card.className = "bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm";
+        card.className = "bg-white p-4 rounded-xl border border-neutral-300 shadow-sm w-full";
 
         card.innerHTML = `
-          <!-- Cabecera del Camión -->
-          <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-3">
-            <div class="flex items-center gap-2.5">
-              <span class="bg-gradient-to-r from-rlc-navy to-rlc-navyLight text-white font-extrabold text-xs px-3 py-1 rounded-md shadow-sm font-mono flex items-center gap-1.5">
-                <i class="fa-solid fa-trailer text-rlc-cyan text-[11px]"></i> Camión #${truck.index}
+          <!-- Fila Superior de Métricas -->
+          <div class="flex flex-wrap items-center justify-between border-b border-neutral-200 pb-2 mb-3 gap-2">
+            <div class="flex items-center gap-2">
+              <span class="bg-black text-white font-extrabold text-xs px-2.5 py-1 rounded font-mono">
+                Camión #${truck.index}
               </span>
-              <span class="text-xs text-slate-500 font-medium">${truck.items.length} bultos estibados</span>
+              <span class="text-xs text-neutral-500 font-medium">${truck.items.length} bultos asignados</span>
             </div>
             
-            <div class="flex flex-wrap items-center gap-3 text-xs">
-              <div class="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
-                <span class="text-slate-400 font-medium">Suelo:</span>
-                <span class="font-bold text-slate-700 font-mono ml-1">${truck.physicalLDM.toFixed(2)} m</span>
+            <div class="flex flex-wrap items-center gap-3 text-xs font-mono">
+              <div class="bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+                <span class="text-neutral-500">Suelo:</span>
+                <span class="font-bold text-black ml-1">${truck.physicalLDM.toFixed(2)} / ${truckL.toFixed(2)} m</span>
               </div>
-              <div class="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
-                <span class="text-slate-400 font-medium">Equiv. Peso:</span>
-                <span class="font-bold text-amber-700 font-mono ml-1">${truck.weightLDM.toFixed(2)} m</span>
-              </div>
-              <div class="bg-blue-50 border border-rlc-blue/30 px-3 py-1 rounded-md">
-                <span class="text-rlc-blue font-bold uppercase tracking-tight text-[11px]">Tasable:</span>
-                <span class="font-extrabold text-rlc-navy font-mono text-sm ml-1">${truck.chargeableLDM.toFixed(2)} LDM</span>
-              </div>
-              <div class="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
-                <span class="text-slate-400 font-medium">Peso:</span>
-                <span class="font-bold font-mono ml-1 ${truck.weight > maxWeight ? 'text-rose-600' : 'text-slate-800'}">
+              <div class="bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+                <span class="text-neutral-500">Peso:</span>
+                <span class="font-bold ${truck.weight > maxWeight ? 'text-red-600' : 'text-black'} ml-1">
                   ${truck.weight.toLocaleString('es-ES')} / ${maxWeight.toLocaleString('es-ES')} kg
                 </span>
               </div>
-            </div>
-          </div>
-
-          <!-- Métricas de Ocupación -->
-          <div class="grid grid-cols-2 gap-4 mb-4 text-[11px]">
-            <div>
-              <div class="flex justify-between mb-1.5">
-                <span class="text-slate-500 font-medium">Longitud de Suelo (13.60 m)</span>
-                <span class="font-bold text-slate-700 font-mono">${ldmPct.toFixed(1)}%</span>
-              </div>
-              <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
-                <div class="bg-gradient-to-r from-rlc-blue to-rlc-cyan h-2.5 transition-all duration-300" style="width: ${ldmPct}%"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1.5">
-                <span class="text-slate-500 font-medium">Carga Útil (${maxWeight.toLocaleString('es-ES')} kg)</span>
-                <span class="font-bold font-mono ${weightPct >= 100 ? 'text-rose-600' : 'text-slate-700'}">${weightPct.toFixed(1)}%</span>
-              </div>
-              <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
-                <div class="${weightPct >= 100 ? 'bg-rose-500' : 'bg-emerald-500'} h-2.5 transition-all duration-300" style="width: ${weightPct}%"></div>
+              <div class="bg-red-50 px-2.5 py-0.5 rounded border border-red-300">
+                <span class="text-red-700 font-bold">LDM Tasable:</span>
+                <span class="font-extrabold text-red-600 text-sm ml-1">${truck.chargeableLDM.toFixed(2)} LDM</span>
               </div>
             </div>
           </div>
 
-          <!-- Visualizador 2D Realista del Semirremolque -->
-          <div class="overflow-x-auto pb-2">
-            <div class="min-w-[800px]">
-              
-              <!-- Regla de Cotas Superiores (X) -->
-              <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-1.5 pl-14 pr-3">
-                <span class="flex items-center gap-1"><i class="fa-solid fa-angles-right text-slate-300"></i> 0.0 m (Frente)</span>
-                <span>3.4 m</span>
-                <span>6.8 m</span>
-                <span>10.2 m</span>
-                <span class="flex items-center gap-1">${truckL.toFixed(2)} m (Puertas) <i class="fa-solid fa-angles-left text-slate-300"></i></span>
+          <!-- Barras de progreso -->
+          <div class="grid grid-cols-2 gap-3 mb-3 text-[10px]">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-neutral-500">Ocupación Longitudinal Suelo</span>
+                <span class="font-bold font-mono">${ldmPct.toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                <div class="bg-black h-2 transition-all duration-300" style="width: ${ldmPct}%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-neutral-500">Carga Útil</span>
+                <span class="font-bold font-mono ${weightPct >= 100 ? 'text-red-600' : 'text-neutral-800'}">${weightPct.toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                <div class="${weightPct >= 100 ? 'bg-red-600' : 'bg-neutral-800'} h-2 transition-all duration-300" style="width: ${weightPct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tráiler Panorámico a Escala Completa -->
+          <div class="w-full">
+            <!-- Regla Superior de Metros (X) -->
+            <div class="flex justify-between text-[10px] text-neutral-400 font-mono mb-1 pl-12 pr-2">
+              <span>0.0 m (Frente)</span>
+              <span>2.7 m</span>
+              <span>5.4 m</span>
+              <span>8.1 m</span>
+              <span>10.8 m</span>
+              <span>${truckL.toFixed(2)} m (Puerta)</span>
+            </div>
+
+            <div class="flex items-stretch w-full">
+              <!-- Regla de Anchura Lateral (Y) -->
+              <div class="w-12 flex flex-col justify-between text-[10px] text-neutral-400 font-mono pr-2 text-right select-none py-1">
+                <span>0.0</span>
+                <span>0.8</span>
+                <span>1.6</span>
+                <span>${truckW.toFixed(2)}m</span>
               </div>
 
-              <div class="flex items-stretch">
-                <!-- Regla Lateral (Y) -->
-                <div class="w-14 flex flex-col justify-between text-[10px] text-slate-400 font-mono pr-2.5 text-right select-none py-1">
-                  <span>0.0 m</span>
-                  <span>0.80 m</span>
-                  <span>1.60 m</span>
-                  <span>${truckW.toFixed(2)} m</span>
+              <!-- Cabina Tractora Minimalista -->
+              <div class="w-6 bg-black rounded-l border-y-2 border-l-2 border-neutral-900 flex flex-col items-center justify-center text-[9px] text-white font-mono uppercase tracking-widest" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                CABINA
+              </div>
+
+              <!-- Plataforma del Camión 100% Ancho Dropzone -->
+              <div id="truck-box-${truck.index}" 
+                   data-truck-index="${truck.index}"
+                   class="truck-dropzone relative flex-1 border-2 border-black rounded-r truck-deck" 
+                   style="height: 220px;">
+                
+                <!-- Cota Visual de LDM Ocupados -->
+                <div class="absolute top-0 bottom-0 left-0 bg-red-600/10 border-r-2 border-red-600 pointer-events-none transition-all duration-300 z-10"
+                     style="width: ${(truck.physicalLDM / truckL) * 100}%">
+                  <span class="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow">
+                    ${truck.physicalLDM.toFixed(2)} m LDM
+                  </span>
                 </div>
 
-                <!-- Cabina Tractora Estilizada (Frontal) -->
-                <div class="w-7 bg-slate-800 rounded-l-md border-y-2 border-l-2 border-slate-700 flex flex-col items-center justify-center text-[9px] text-slate-400 font-mono uppercase tracking-widest" style="writing-mode: vertical-rl; transform: rotate(180deg);">
-                  TRACTORA
-                </div>
+                <!-- Palés Renderizados -->
+                <div class="absolute inset-0">
+                  ${truck.items.map(it => {
+                    const left = (it.y / truckL) * 100;
+                    const top = (it.x / truckW) * 100;
+                    const width = (it.length / truckL) * 100;
+                    const height = (it.width / truckW) * 100;
 
-                <!-- Caja del Remolque Dropzone -->
-                <div id="truck-box-${truck.index}" 
-                     data-truck-index="${truck.index}"
-                     class="truck-dropzone relative flex-1 border-y-2 border-r-2 border-slate-700 rounded-r-md truck-deck" 
-                     style="height: 185px;">
-                  
-                  <!-- Cota Visual de Ocupación Real -->
-                  <div class="absolute top-0 bottom-0 left-0 bg-rlc-blue/10 border-r-2 border-rlc-blue pointer-events-none transition-all duration-300 z-10"
-                       style="width: ${(truck.physicalLDM / truckL) * 100}%">
-                    <span class="absolute top-1.5 right-1.5 bg-rlc-navy text-rlc-cyan text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow">
-                      ${truck.physicalLDM.toFixed(2)} m LDM
-                    </span>
-                  </div>
-
-                  <!-- Palés / Bultos Estibados -->
-                  <div class="absolute inset-0">
-                    ${truck.items.map(it => {
-                      const left = (it.y / truckL) * 100;
-                      const top = (it.x / truckW) * 100;
-                      const width = (it.length / truckL) * 100;
-                      const height = (it.width / truckW) * 100;
-
-                      return `
-                        <div id="${it.id}"
-                             draggable="true"
-                             title="${it.name}&#10;Dimensiones: ${it.length.toFixed(2)} × ${it.width.toFixed(2)} m&#10;Peso: ${it.weight} kg&#10;• Clic: Girar 90°&#10;• Arrastra: Mover libremente"
-                             class="pallet-card absolute flex flex-col items-center justify-center cursor-move text-white font-medium overflow-hidden rounded-[3px] border border-black/20"
-                             style="
-                               left: ${left}%;
-                               top: ${top}%;
-                               width: ${width}%;
-                               height: ${height}%;
-                               background-color: ${it.color};
-                             ">
-                          <span class="text-[10px] font-bold leading-tight font-mono tracking-tight truncate px-1">${it.length.toFixed(2)}×${it.width.toFixed(2)}</span>
-                          <span class="text-[9px] font-semibold opacity-90 leading-none mt-0.5 font-mono">${it.weight}kg</span>
-                        </div>
-                      `;
-                    }).join('')}
-                  </div>
+                    return `
+                      <div id="${it.id}"
+                           draggable="true"
+                           title="${it.name}&#10;Dimensiones: ${it.length.toFixed(2)} × ${it.width.toFixed(2)} m&#10;Peso: ${it.weight} kg&#10;• Clic: Girar 90°&#10;• Arrastra: Mover"
+                           class="pallet-card absolute flex flex-col items-center justify-center cursor-move text-white font-medium overflow-hidden rounded-[2px] border border-white/30"
+                           style="
+                             left: ${left}%;
+                             top: ${top}%;
+                             width: ${width}%;
+                             height: ${height}%;
+                             background-color: ${it.color};
+                           ">
+                        <span class="text-[10px] font-bold leading-tight font-mono tracking-tight truncate px-1">${it.length.toFixed(2)}×${it.width.toFixed(2)}</span>
+                        <span class="text-[9px] font-semibold opacity-90 leading-none mt-0.5 font-mono">${it.weight}kg</span>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
             </div>
