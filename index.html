@@ -11,12 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
     .truck-deck {
       background-color: #ffffff;
       background-size: 20px 20px;
@@ -25,18 +21,23 @@
         linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
     }
     .pallet-card {
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      user-select: none;
+      touch-action: none;
     }
     .pallet-card:hover {
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.45);
       z-index: 30 !important;
     }
   </style>
 </head>
 <body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased">
   
-  <!-- Cabecera Negro / Rojo / Blanco -->
+  <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
+    <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
+    <span id="toast-msg">Espacio insuficiente</span>
+  </div>
+
   <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-50 px-4 py-2.5 shadow-md">
     <div class="w-full flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -45,7 +46,7 @@
         </div>
         <div>
           <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">Planificador de Estiba & Calculadora LDM</h1>
-          <p class="text-[11px] text-neutral-400 font-mono">1 LDM = 1.750 kg | Dimensiones reales 13.60 × 2.44 m</p>
+          <p class="text-[11px] text-neutral-400 font-mono">Ajuste Magnético a Ras (Snap) | 1 LDM = 1.750 kg | 13.60 × 2.44 m</p>
         </div>
       </div>
       
@@ -57,13 +58,11 @@
     </div>
   </header>
 
-  <!-- Contenedor Pantalla Completa (Full Width) -->
   <main class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4">
     
-    <!-- Columna Lateral Izquierda (3 columnas en pantallas grandes) -->
+    <!-- Columna Lateral -->
     <div class="xl:col-span-3 space-y-4">
       
-      <!-- Parámetros Semirremolque -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -97,7 +96,6 @@
           <span class="w-2 h-2 rounded-full bg-red-600"></span> Añadir Bultos
         </h2>
 
-        <!-- Presets -->
         <div class="grid grid-cols-3 gap-1.5 mb-2.5">
           <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500, '#000000')" class="border border-neutral-200 hover:border-red-600 hover:bg-neutral-50 rounded p-1.5 text-center text-xs transition">
             <div class="font-bold text-neutral-800 text-[11px]">Europalé</div>
@@ -150,7 +148,7 @@
         </form>
       </div>
 
-      <!-- Totales y Resumen -->
+      <!-- Resumen -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -193,10 +191,9 @@
       </div>
     </div>
 
-    <!-- Columna Principal Tráiler (9 columnas en pantallas grandes - Ocupa todo el espacio lateral) -->
+    <!-- Columna Principal Tráiler -->
     <div class="xl:col-span-9 space-y-4">
       
-      <!-- Barra Superior de Herramientas -->
       <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-4 text-neutral-700">
           <span class="flex items-center gap-1.5 font-medium">
@@ -204,7 +201,7 @@
           </span>
           <span class="text-neutral-300">|</span>
           <span class="flex items-center gap-1.5 font-medium">
-            <i class="fa-solid fa-up-down-left-right text-black"></i> Arrastrar: <strong>Mover libremente</strong>
+            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Se pega a ras de otros palés y paredes</strong>
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -217,7 +214,6 @@
         </div>
       </div>
 
-      <!-- Contenedor Dinámico de Camiones -->
       <div id="trucks-container" class="space-y-4 w-full"></div>
     </div>
   </main>
@@ -240,6 +236,16 @@
       return isNaN(parsed) ? defaultVal : parsed;
     }
 
+    function showToast(msg) {
+      const toast = document.getElementById('toast-alert');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
     function setPreset(l, w, name, weight, color) {
       document.getElementById('p-length').value = l.toFixed(2);
       document.getElementById('p-width').value = w.toFixed(2);
@@ -249,7 +255,6 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // 33 Europalés típicos iniciales
       addPalletBatch('Europalé', 1.20, 0.80, 33, 500, '#000000');
       autoArrange();
       render();
@@ -305,13 +310,13 @@
           id: 'item_' + Math.random().toString(36).substr(2, 9),
           groupId,
           name,
-          length,
-          width,
+          length, // Eje horizontal X (0 a 13.60 m)
+          width,  // Eje vertical Y (0 a 2.44 m)
           weight,
           color,
           truckIndex: 1,
-          x: 0,
-          y: 0
+          x: 0,   // Posición longitudinal (metros)
+          y: 0    // Posición transversal (metros)
         });
       }
     }
@@ -323,14 +328,116 @@
       render();
     }
 
+    // Comprueba solape estricto con tolerancia de 2 milímetros
+    function isOverlapping(x1, y1, w1, h1, x2, y2, w2, h2) {
+      const tol = 0.002;
+      return (
+        x1 + tol < x2 + w2 &&
+        x1 + w1 - tol > x2 &&
+        y1 + tol < y2 + h2 &&
+        y1 + h1 - tol > y2
+      );
+    }
+
+    // Motor de Ajuste Magnético (Snap a ras)
+    function snapAndValidate(item, targetX, targetY, truckIndex, newLen = null, newWid = null) {
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+
+      const len = newLen !== null ? newLen : item.length;
+      const wid = newWid !== null ? newWid : item.width;
+
+      // 1. Imán a las paredes del tráiler (tolerancia 12 cm)
+      const snapThreshold = 0.12;
+
+      let snappedX = targetX;
+      let snappedY = targetY;
+
+      if (Math.abs(snappedX - 0) < snapThreshold) snappedX = 0;
+      if (Math.abs(snappedX + len - truckL) < snapThreshold) snappedX = truckL - len;
+
+      if (Math.abs(snappedY - 0) < snapThreshold) snappedY = 0;
+      if (Math.abs(snappedY + wid - truckW) < snapThreshold) snappedY = truckW - wid;
+
+      // 2. Imán a ras con los bordes de los otros palés
+      const others = items.filter(it => it.truckIndex === truckIndex && it.id !== item.id);
+
+      others.forEach(other => {
+        // A ras horizontalmente (X)
+        if (Math.abs(snappedX - (other.x + other.length)) < snapThreshold) {
+          snappedX = other.x + other.length;
+        }
+        if (Math.abs((snappedX + len) - other.x) < snapThreshold) {
+          snappedX = other.x - len;
+        }
+
+        // A ras verticalmente (Y)
+        if (Math.abs(snappedY - (other.y + other.width)) < snapThreshold) {
+          snappedY = other.y + other.width;
+        }
+        if (Math.abs((snappedY + wid) - other.y) < snapThreshold) {
+          snappedY = other.y - wid;
+        }
+      });
+
+      // 3. Forzar dentro de los límites físicos del camión
+      snappedX = Math.max(0, Math.min(truckL - len, snappedX));
+      snappedY = Math.max(0, Math.min(truckW - wid, snappedY));
+
+      // 4. Comprobación de solapamiento
+      const collides = others.some(other => 
+        isOverlapping(snappedX, snappedY, len, wid, other.x, other.y, other.length, other.width)
+      );
+
+      return {
+        valid: !collides,
+        x: snappedX,
+        y: snappedY
+      };
+    }
+
+    // Giro 90° con pivote magnético
     function rotateItem(itemId) {
-      const it = items.find(i => i.id === itemId);
-      if (it) {
-        const tmp = it.length;
-        it.length = it.width;
-        it.width = tmp;
-        render();
+      const item = items.find(i => i.id === itemId);
+      if (!item) return;
+
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const newLen = item.width;
+      const newWid = item.length;
+
+      if (newWid > truckW + 0.01) {
+        showToast(`Imposible girar: el ancho del palé (${newWid.toFixed(2)}m) supera los ${truckW.toFixed(2)}m del camión.`);
+        return;
       }
+
+      // Probar colocación con imán en su posición actual
+      let check = snapAndValidate(item, item.x, item.y, item.truckIndex, newLen, newWid);
+
+      if (!check.valid) {
+        // Intenta pegar a ras por detrás o por los lados si el giro toca a un vecino
+        const offsets = [
+          { dx: -(newLen - item.length), dy: 0 },
+          { dx: 0, dy: -(newWid - item.width) },
+          { dx: item.length, dy: 0 },
+          { dx: -newLen, dy: 0 }
+        ];
+
+        for (const off of offsets) {
+          check = snapAndValidate(item, item.x + off.dx, item.y + off.dy, item.truckIndex, newLen, newWid);
+          if (check.valid) break;
+        }
+      }
+
+      if (!check.valid) {
+        showToast('Giro bloqueado: choca con otro palé o la pared.');
+        return;
+      }
+
+      item.length = newLen;
+      item.width = newWid;
+      item.x = check.x;
+      item.y = check.y;
+      render();
     }
 
     function autoArrange() {
@@ -339,53 +446,55 @@
       const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
 
       let currentTruck = 1;
-      let currentShelfY = 0;
-      let currentShelfX = 0;
-      let currentShelfThickness = 0;
+      let currentX = 0; // Avance longitudinal (metros)
+      let currentY = 0; // Avance transversal (metros)
+      let currentColThickness = 0;
       let currentWeight = 0;
 
       items.forEach(item => {
         const itemLen = item.length;
         const itemWid = item.width;
 
-        const fitsInCurrentShelf = (currentShelfX + itemWid <= truckW + 0.02);
+        // ¿Cabe en el ancho transversal restante de la columna?
+        const fitsInWidth = (currentY + itemWid <= truckW + 0.005);
 
-        if (fitsInCurrentShelf) {
-          const wouldExceedLength = (currentShelfY + Math.max(currentShelfThickness, itemLen) > truckL + 0.02);
-          const wouldExceedWeight = (currentWeight + item.weight > maxWeight);
+        if (fitsInWidth) {
+          const wouldExceedLen = (currentX + Math.max(currentColThickness, itemLen) > truckL + 0.005);
+          const wouldExceedWgt = (currentWeight + item.weight > maxWeight);
 
-          if (wouldExceedLength || wouldExceedWeight) {
+          if (wouldExceedLen || wouldExceedWgt) {
             currentTruck++;
-            currentShelfY = 0;
-            currentShelfX = 0;
-            currentShelfThickness = 0;
+            currentX = 0;
+            currentY = 0;
+            currentColThickness = 0;
             currentWeight = 0;
           }
         } else {
-          currentShelfY += currentShelfThickness;
-          currentShelfX = 0;
-          currentShelfThickness = 0;
+          // Salta a la siguiente columna hacia la derecha (puerta)
+          currentX += currentColThickness;
+          currentY = 0;
+          currentColThickness = 0;
 
-          const wouldExceedLength = (currentShelfY + itemLen > truckL + 0.02);
-          const wouldExceedWeight = (currentWeight + item.weight > maxWeight);
+          const wouldExceedLen = (currentX + itemLen > truckL + 0.005);
+          const wouldExceedWgt = (currentWeight + item.weight > maxWeight);
 
-          if (wouldExceedLength || wouldExceedWeight) {
+          if (wouldExceedLen || wouldExceedWgt) {
             currentTruck++;
-            currentShelfY = 0;
-            currentShelfX = 0;
-            currentShelfThickness = 0;
+            currentX = 0;
+            currentY = 0;
+            currentColThickness = 0;
             currentWeight = 0;
           }
         }
 
         item.truckIndex = currentTruck;
-        item.x = currentShelfX;
-        item.y = currentShelfY;
+        item.x = currentX;
+        item.y = currentY;
 
         currentWeight += item.weight;
-        currentShelfX += itemWid;
-        if (itemLen > currentShelfThickness) {
-          currentShelfThickness = itemLen;
+        currentY += itemWid;
+        if (itemLen > currentColThickness) {
+          currentColThickness = itemLen;
         }
       });
     }
@@ -406,7 +515,7 @@
 
         truckItems.forEach(it => {
           truckWeight += it.weight;
-          const reach = (it.y || 0) + it.length;
+          const reach = it.x + it.length;
           if (reach > maxReach) maxReach = reach;
         });
 
@@ -438,7 +547,7 @@
       document.getElementById('tot-ldm-chargeable').innerText = `${totalChargeableLDM.toFixed(2)} LDM`;
       document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Camión' : 'Camiones'}`;
 
-      // Lista de partidas lateral
+      // Lista lateral
       const groupList = document.getElementById('pallet-group-list');
       if (palletGroups.length === 0) {
         groupList.innerHTML = `<p class="text-neutral-400 italic text-center py-2">Sin mercancía añadida</p>`;
@@ -465,7 +574,7 @@
         }).join('');
       }
 
-      // Render Camiones Formato Tráiler Extendido
+      // Render Camiones
       const container = document.getElementById('trucks-container');
       container.innerHTML = '';
 
@@ -477,7 +586,6 @@
         card.className = "bg-white p-4 rounded-xl border border-neutral-300 shadow-sm w-full";
 
         card.innerHTML = `
-          <!-- Fila Superior de Métricas -->
           <div class="flex flex-wrap items-center justify-between border-b border-neutral-200 pb-2 mb-3 gap-2">
             <div class="flex items-center gap-2">
               <span class="bg-black text-white font-extrabold text-xs px-2.5 py-1 rounded font-mono">
@@ -504,7 +612,6 @@
             </div>
           </div>
 
-          <!-- Barras de progreso -->
           <div class="grid grid-cols-2 gap-3 mb-3 text-[10px]">
             <div>
               <div class="flex justify-between mb-1">
@@ -526,9 +633,8 @@
             </div>
           </div>
 
-          <!-- Tráiler Panorámico a Escala Completa -->
+          <!-- Tráiler Panorámico a Escala -->
           <div class="w-full">
-            <!-- Regla Superior de Metros (X) -->
             <div class="flex justify-between text-[10px] text-neutral-400 font-mono mb-1 pl-12 pr-2">
               <span>0.0 m (Frente)</span>
               <span>2.7 m</span>
@@ -539,7 +645,6 @@
             </div>
 
             <div class="flex items-stretch w-full">
-              <!-- Regla de Anchura Lateral (Y) -->
               <div class="w-12 flex flex-col justify-between text-[10px] text-neutral-400 font-mono pr-2 text-right select-none py-1">
                 <span>0.0</span>
                 <span>0.8</span>
@@ -547,18 +652,18 @@
                 <span>${truckW.toFixed(2)}m</span>
               </div>
 
-              <!-- Cabina Tractora Minimalista -->
+              <!-- Cabina -->
               <div class="w-6 bg-black rounded-l border-y-2 border-l-2 border-neutral-900 flex flex-col items-center justify-center text-[9px] text-white font-mono uppercase tracking-widest" style="writing-mode: vertical-rl; transform: rotate(180deg);">
                 CABINA
               </div>
 
-              <!-- Plataforma del Camión 100% Ancho Dropzone -->
+              <!-- Plataforma del Camión Dropzone -->
               <div id="truck-box-${truck.index}" 
                    data-truck-index="${truck.index}"
                    class="truck-dropzone relative flex-1 border-2 border-black rounded-r truck-deck" 
                    style="height: 220px;">
                 
-                <!-- Cota Visual de LDM Ocupados -->
+                <!-- Cota Visual LDM -->
                 <div class="absolute top-0 bottom-0 left-0 bg-red-600/10 border-r-2 border-red-600 pointer-events-none transition-all duration-300 z-10"
                      style="width: ${(truck.physicalLDM / truckL) * 100}%">
                   <span class="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow">
@@ -569,16 +674,16 @@
                 <!-- Palés Renderizados -->
                 <div class="absolute inset-0">
                   ${truck.items.map(it => {
-                    const left = (it.y / truckL) * 100;
-                    const top = (it.x / truckW) * 100;
+                    const left = (it.x / truckL) * 100;
+                    const top = (it.y / truckW) * 100;
                     const width = (it.length / truckL) * 100;
                     const height = (it.width / truckW) * 100;
 
                     return `
                       <div id="${it.id}"
                            draggable="true"
-                           title="${it.name}&#10;Dimensiones: ${it.length.toFixed(2)} × ${it.width.toFixed(2)} m&#10;Peso: ${it.weight} kg&#10;• Clic: Girar 90°&#10;• Arrastra: Mover"
-                           class="pallet-card absolute flex flex-col items-center justify-center cursor-move text-white font-medium overflow-hidden rounded-[2px] border border-white/30"
+                           title="${it.name}&#10;Dimensiones: ${it.length.toFixed(2)}m largo × ${it.width.toFixed(2)}m ancho&#10;Peso: ${it.weight} kg&#10;• Clic: Girar 90°&#10;• Arrastra: Mover (se pega a ras)"
+                           class="pallet-card absolute flex flex-col items-center justify-center cursor-move text-white font-medium overflow-hidden rounded-[2px] border border-white/40"
                            style="
                              left: ${left}%;
                              top: ${top}%;
@@ -603,16 +708,28 @@
       setupDragAndDrop();
     }
 
+    // Drag & Drop con Ajuste Magnético
     function setupDragAndDrop() {
       const pallets = document.querySelectorAll('.pallet-card');
       const dropzones = document.querySelectorAll('.truck-dropzone');
       const truckL = parseNum(truckLenInput.value, 13.6);
       const truckW = parseNum(truckWidInput.value, 2.44);
 
+      let dragOffsetMetersX = 0;
+      let dragOffsetMetersY = 0;
+
       pallets.forEach(p => {
         p.addEventListener('dragstart', (e) => {
           e.dataTransfer.setData('text/plain', p.id);
           p.classList.add('opacity-40');
+
+          // Medir punto de agarre del ratón dentro del palé
+          const rect = p.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+
+          dragOffsetMetersX = (offsetX / rect.width);
+          dragOffsetMetersY = (offsetY / rect.height);
         });
 
         p.addEventListener('dragend', () => {
@@ -639,18 +756,25 @@
           const rect = dz.getBoundingClientRect();
           const targetTruckIndex = parseInt(dz.getAttribute('data-truck-index'));
 
-          const relX = e.clientX - rect.left;
-          const relY = e.clientY - rect.top;
+          // Coordenada bruta en píxeles
+          const clickX = e.clientX - rect.left;
+          const clickY = e.clientY - rect.top;
 
-          let posX = (relX / rect.width) * truckL;
-          let posY = (relY / rect.height) * truckW;
+          // Conversión a metros descontando el offset del clic
+          const rawMetersX = (clickX / rect.width) * truckL - (dragOffsetMetersX * item.length);
+          const rawMetersY = (clickY / rect.height) * truckW - (dragOffsetMetersY * item.width);
 
-          if (posX + item.length > truckL) posX = Math.max(0, truckL - item.length);
-          if (posY + item.width > truckW) posY = Math.max(0, truckW - item.width);
+          // Pasar por el imán magnético y validador de colisión
+          const result = snapAndValidate(item, rawMetersX, rawMetersY, targetTruckIndex);
+
+          if (!result.valid) {
+            showToast('No se puede soltar ahí: colisiona con otro palé.');
+            return;
+          }
 
           item.truckIndex = targetTruckIndex;
-          item.y = Math.max(0, posX);
-          item.x = Math.max(0, posY);
+          item.x = result.x;
+          item.y = result.y;
 
           render();
         });
