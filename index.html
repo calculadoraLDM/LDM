@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora LDM & Planificador de Carga</title>
+  <title>Calculadora LDM & Planificador de Carga Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     .truck-canvas {
-      background: repeating-linear-gradient(
-        0deg,
-        #f8fafc,
-        #f8fafc 15px,
-        #f1f5f9 15px,
-        #f1f5f9 30px
-      );
+      background-size: 20px 20px;
+      background-image: 
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      background-color: #f8fafc;
+    }
+    .pallet-drag {
+      touch-action: none;
+      user-select: none;
     }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 antialiased font-sans">
-  <!-- Header -->
   <header class="bg-slate-900 text-white border-b border-slate-800 shadow-sm sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -27,11 +28,11 @@
           <i class="fa-solid fa-truck-moving text-xl"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold leading-tight">Calculadora LDM Pro</h1>
-          <p class="text-xs text-slate-400">Planificador multi-camión (13.60 × 2.44 m) y control de peso</p>
+          <h1 class="text-lg font-bold leading-tight">Calculadora LDM & Estiba Pro</h1>
+          <p class="text-xs text-slate-400">LDM por suelo, peso tasable (1 LDM = 1.750 kg) y Drag & Drop</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <button id="btn-reset" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-slate-300 transition">
           <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar
         </button>
@@ -39,14 +40,13 @@
     </div>
   </header>
 
-  <!-- Contenedor Principal -->
   <main class="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <!-- Panel Izquierdo: Formularios y Resumen -->
+    <!-- Panel Izquierdo -->
     <div class="lg:col-span-4 space-y-5">
-      <!-- Configuración del Camión Estándar -->
+      <!-- Configuración -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-blue-600"></i> Parámetros de Semirremolque
+          <i class="fa-solid fa-sliders text-blue-600"></i> Parámetros de Semirremolque y Ratio
         </h2>
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div>
@@ -57,32 +57,35 @@
             <label class="block text-slate-500 mb-1">Ancho útil (m)</label>
             <input type="text" id="truck-width" value="2.44" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
           </div>
-          <div class="col-span-2">
-            <label class="block text-slate-500 mb-1">Carga máxima útil por camión (kg)</label>
+          <div>
+            <label class="block text-slate-500 mb-1">Carga máx. (kg)</label>
             <input type="text" id="truck-max-weight" value="24000" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" />
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-1">Ratio kg por LDM</label>
+            <input type="text" id="ratio-ldm" value="1750" class="w-full border rounded px-2.5 py-1.5 font-medium bg-slate-50 focus:bg-white focus:outline-blue-500" title="Estándar internacional: 1750 kg = 1 LDM" />
           </div>
         </div>
       </div>
 
-      <!-- Añadir Palés / Bultos -->
+      <!-- Añadir Mercancía -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
           <i class="fa-solid fa-boxes-stacked text-blue-600"></i> Añadir Mercancía
         </h2>
         
-        <!-- Presets -->
         <div class="grid grid-cols-3 gap-2 mb-3">
-          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé')" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
+          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500)" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
             <div class="font-bold">Europeo</div>
             <div class="text-[10px] text-slate-500">1.2 × 0.8 m</div>
           </button>
-          <button type="button" onclick="setPreset(1.20, 1.00, 'Americano')" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
+          <button type="button" onclick="setPreset(1.20, 1.00, 'Americano', 600)" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
             <div class="font-bold">Americano</div>
             <div class="text-[10px] text-slate-500">1.2 × 1.0 m</div>
           </button>
-          <button type="button" onclick="setPreset(0.80, 0.60, 'Medio Palé')" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
-            <div class="font-bold">Medio Palé</div>
-            <div class="text-[10px] text-slate-500">0.8 × 0.6 m</div>
+          <button type="button" onclick="setPreset(5.00, 2.00, 'Maquinaria Pesada', 12000)" class="border border-slate-200 hover:border-blue-500 hover:bg-blue-50 rounded p-2 text-center text-xs transition">
+            <div class="font-bold text-amber-700">Pieza 12t</div>
+            <div class="text-[10px] text-slate-500">5.0 × 2.0 m</div>
           </button>
         </div>
 
@@ -116,7 +119,7 @@
             <div class="flex gap-2">
               <input type="color" id="p-color" value="#2563eb" class="h-8 w-14 rounded border cursor-pointer p-0.5" />
               <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded px-4 py-2 text-xs transition shadow-sm">
-                <i class="fa-solid fa-plus mr-1"></i> Añadir a la lista
+                <i class="fa-solid fa-plus mr-1"></i> Añadir a la expedición
               </button>
             </div>
           </div>
@@ -126,25 +129,32 @@
       <!-- Resumen Global -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center justify-between">
-          <span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-blue-600"></i> Totales de Expedición</span>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-calculator text-blue-600"></i> Totales de Facturación</span>
           <span id="badge-trucks" class="bg-blue-100 text-blue-800 text-[11px] font-bold px-2 py-0.5 rounded-full">1 Camión</span>
         </h2>
-        <div class="grid grid-cols-2 gap-3 text-center">
-          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-            <span class="text-[11px] text-slate-500 block">Total Palés</span>
-            <span id="tot-pallets" class="text-lg font-bold text-slate-800">0</span>
+        <div class="grid grid-cols-2 gap-3 text-center mb-3">
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+            <span class="text-[10px] text-slate-500 block">Total Bultos</span>
+            <span id="tot-pallets" class="text-base font-bold text-slate-800">0</span>
           </div>
-          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-            <span class="text-[11px] text-slate-500 block">Total Peso</span>
-            <span id="tot-weight" class="text-lg font-bold text-slate-800">0 kg</span>
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+            <span class="text-[10px] text-slate-500 block">Total Peso</span>
+            <span id="tot-weight" class="text-base font-bold text-slate-800">0 kg</span>
           </div>
-          <div class="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
-            <span class="text-[11px] text-blue-700 block">LDM Teórico (Superficie/2.4)</span>
-            <span id="tot-ldm-theor" class="text-lg font-bold text-blue-900">0.00 m</span>
+        </div>
+
+        <div class="bg-blue-50/60 p-3 rounded-lg border border-blue-200 space-y-1.5 text-xs">
+          <div class="flex justify-between items-center text-slate-600">
+            <span>LDM Físico (Suelo ocupado):</span>
+            <span id="tot-ldm-real" class="font-bold font-mono text-slate-800">0.00 m</span>
           </div>
-          <div class="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
-            <span class="text-[11px] text-blue-700 block">LDM Real Ocupado</span>
-            <span id="tot-ldm-real" class="text-lg font-bold text-blue-900">0.00 m</span>
+          <div class="flex justify-between items-center text-slate-600">
+            <span>LDM por Peso (Peso / Ratio):</span>
+            <span id="tot-ldm-weight" class="font-bold font-mono text-amber-700">0.00 m</span>
+          </div>
+          <div class="flex justify-between items-center border-t border-blue-200 pt-1.5 text-blue-900 font-bold text-sm">
+            <span>LDM Tasables (Mayor):</span>
+            <span id="tot-ldm-chargeable" class="font-mono text-base text-blue-700">0.00 m</span>
           </div>
         </div>
       </div>
@@ -156,21 +166,23 @@
       </div>
     </div>
 
-    <!-- Panel Derecho: Visualizador -->
+    <!-- Panel Derecho -->
     <div class="lg:col-span-8 space-y-6">
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div class="text-xs text-slate-500">
-          <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>
-          Haz clic sobre cualquier palé para <strong>girarlo 90°</strong>. En ancho 2.44m caben 3 europalés a 0.80m (3×0.80=2.40m) o 2 a 1.20m (2×1.20=2.40m).
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="text-slate-600 space-y-1">
+          <div><i class="fa-solid fa-hand-pointer text-blue-600 mr-1"></i> <strong>Haz clic</strong> en un palé para <strong>girarlo 90°</strong>.</div>
+          <div><i class="fa-solid fa-arrows-up-down-left-right text-emerald-600 mr-1"></i> <strong>Arrastra y suelta</strong> los bultos para recolocarlos en el camión.</div>
         </div>
         <div class="flex gap-2">
-          <button id="btn-rotate-all" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-medium text-slate-700 transition">
-            <i class="fa-solid fa-arrows-rotate mr-1"></i> Girar todos (90°)
+          <button id="btn-repack" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded font-medium transition">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-Organizar
+          </button>
+          <button id="btn-rotate-all" class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-medium text-slate-700 transition">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i> Girar todos
           </button>
         </div>
       </div>
 
-      <!-- Camiones renderizados -->
       <div id="trucks-container" class="space-y-6"></div>
     </div>
   </main>
@@ -183,6 +195,7 @@
     const truckLenInput = document.getElementById('truck-length');
     const truckWidInput = document.getElementById('truck-width');
     const truckMaxWeightInput = document.getElementById('truck-max-weight');
+    const ratioLdmInput = document.getElementById('ratio-ldm');
 
     function parseNum(val, defaultVal = 0) {
       if (typeof val === 'number') return val;
@@ -192,15 +205,16 @@
       return isNaN(parsed) ? defaultVal : parsed;
     }
 
-    function setPreset(l, w, name) {
+    function setPreset(l, w, name, weight) {
       document.getElementById('p-length').value = l.toFixed(2);
       document.getElementById('p-width').value = w.toFixed(2);
       document.getElementById('p-name').value = name;
+      document.getElementById('p-weight').value = weight;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // 33 Europalés estándar (1.20m largo x 0.80m ancho)
       addPalletBatch('Europalé', 1.20, 0.80, 33, 500, '#2563eb');
+      autoArrange();
       render();
     });
 
@@ -214,16 +228,24 @@
       const color = document.getElementById('p-color').value;
 
       addPalletBatch(name, length, width, qty, weight, color);
+      autoArrange();
       render();
     });
 
-    [truckLenInput, truckWidInput, truckMaxWeightInput].forEach(inp => {
-      inp.addEventListener('input', render);
+    [truckLenInput, truckWidInput, truckMaxWeightInput, ratioLdmInput].forEach(inp => {
+      inp.addEventListener('input', () => {
+        render();
+      });
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
       palletGroups = [];
       items = [];
+      render();
+    });
+
+    document.getElementById('btn-repack').addEventListener('click', () => {
+      autoArrange();
       render();
     });
 
@@ -233,6 +255,7 @@
         item.length = item.width;
         item.width = tmp;
       });
+      autoArrange();
       render();
     });
 
@@ -248,7 +271,10 @@
           length,
           width,
           weight,
-          color
+          color,
+          truckIndex: 1,
+          x: 0,
+          y: 0
         });
       }
     }
@@ -256,6 +282,7 @@
     function removeGroup(groupId) {
       palletGroups = palletGroups.filter(g => g.id !== groupId);
       items = items.filter(it => it.groupId !== groupId);
+      autoArrange();
       render();
     }
 
@@ -269,175 +296,184 @@
       }
     }
 
-    function calculateDistribution() {
+    // Auto-distribución matemática inicial
+    function autoArrange() {
       const truckL = parseNum(truckLenInput.value, 13.6);
       const truckW = parseNum(truckWidInput.value, 2.44);
       const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
 
-      const trucks = [];
-      let currentTruck = createTruck(1, truckL, truckW, maxWeight);
-
-      let currentShelfY = 0; // Posición longitudinal (0 -> 13.6m)
-      let currentShelfX = 0; // Posición transversal (0 -> 2.44m)
+      let currentTruck = 1;
+      let currentShelfY = 0;
+      let currentShelfX = 0;
       let currentShelfThickness = 0;
+      let currentWeight = 0;
 
-      items.forEach((item) => {
-        const itemLen = item.length; // a lo largo
-        const itemWid = item.width;  // a lo ancho
+      items.forEach(item => {
+        const itemLen = item.length;
+        const itemWid = item.width;
 
-        // ¿Cabe en el ancho transversal restante de la fila actual?
         const fitsInCurrentShelf = (currentShelfX + itemWid <= truckW + 0.02);
 
         if (fitsInCurrentShelf) {
           const wouldExceedLength = (currentShelfY + Math.max(currentShelfThickness, itemLen) > truckL + 0.02);
-          const wouldExceedWeight = (currentTruck.currentWeight + item.weight > maxWeight);
+          const wouldExceedWeight = (currentWeight + item.weight > maxWeight);
 
           if (wouldExceedLength || wouldExceedWeight) {
-            trucks.push(finalizeTruck(currentTruck));
-            currentTruck = createTruck(trucks.length + 1, truckL, truckW, maxWeight);
+            currentTruck++;
             currentShelfY = 0;
             currentShelfX = 0;
             currentShelfThickness = 0;
+            currentWeight = 0;
           }
         } else {
-          // Salta a la siguiente fila longitudinal
           currentShelfY += currentShelfThickness;
           currentShelfX = 0;
           currentShelfThickness = 0;
 
           const wouldExceedLength = (currentShelfY + itemLen > truckL + 0.02);
-          const wouldExceedWeight = (currentTruck.currentWeight + item.weight > maxWeight);
+          const wouldExceedWeight = (currentWeight + item.weight > maxWeight);
 
           if (wouldExceedLength || wouldExceedWeight) {
-            trucks.push(finalizeTruck(currentTruck));
-            currentTruck = createTruck(trucks.length + 1, truckL, truckW, maxWeight);
+            currentTruck++;
             currentShelfY = 0;
             currentShelfX = 0;
             currentShelfThickness = 0;
+            currentWeight = 0;
           }
         }
 
-        currentTruck.placements.push({
-          item,
-          x: currentShelfX,
-          y: currentShelfY,
-          w: itemWid,
-          l: itemLen
-        });
+        item.truckIndex = currentTruck;
+        item.x = currentShelfX;
+        item.y = currentShelfY;
 
-        currentTruck.currentWeight += item.weight;
+        currentWeight += item.weight;
         currentShelfX += itemWid;
         if (itemLen > currentShelfThickness) {
           currentShelfThickness = itemLen;
         }
       });
-
-      if (currentTruck.placements.length > 0 || trucks.length === 0) {
-        trucks.push(finalizeTruck(currentTruck));
-      }
-
-      return trucks;
-    }
-
-    function createTruck(index, maxL, maxW, maxWeight) {
-      return {
-        index,
-        maxL,
-        maxW,
-        maxWeight,
-        currentWeight: 0,
-        placements: [],
-        usedLDM: 0,
-        theoreticalLDM: 0
-      };
-    }
-
-    function finalizeTruck(truck) {
-      let maxReach = 0;
-      let totalArea = 0;
-
-      truck.placements.forEach(p => {
-        const reach = p.y + p.l;
-        if (reach > maxReach) maxReach = reach;
-        totalArea += (p.w * p.l);
-      });
-
-      truck.usedLDM = maxReach;
-      truck.theoreticalLDM = totalArea / 2.4;
-      return truck;
     }
 
     function render() {
-      const trucks = calculateDistribution();
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
+      const ratioLdm = parseNum(ratioLdmInput.value, 1750);
 
+      // Agrupar items por camión
+      const maxTruckId = items.reduce((max, it) => Math.max(max, it.truckIndex || 1), 1);
+      const trucksData = [];
+
+      for (let t = 1; t <= maxTruckId; t++) {
+        const truckItems = items.filter(it => it.truckIndex === t);
+        let truckWeight = 0;
+        let maxReach = 0;
+
+        truckItems.forEach(it => {
+          truckWeight += it.weight;
+          const reach = (it.y || 0) + it.length;
+          if (reach > maxReach) maxReach = reach;
+        });
+
+        const physicalLDM = maxReach;
+        const weightLDM = truckWeight / ratioLdm;
+        const chargeableLDM = Math.max(physicalLDM, weightLDM);
+
+        trucksData.push({
+          index: t,
+          items: truckItems,
+          weight: truckWeight,
+          physicalLDM,
+          weightLDM,
+          chargeableLDM
+        });
+      }
+
+      // Totales Globales
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
-      const totalRealLdm = trucks.reduce((acc, t) => acc + t.usedLDM, 0);
-      const totalTheorLdm = items.reduce((acc, it) => acc + (it.length * it.width), 0) / 2.4;
+      const totalPhysicalLDM = trucksData.reduce((acc, t) => acc + t.physicalLDM, 0);
+      const totalWeightLDM = totalWeight / ratioLdm;
+      const totalChargeableLDM = trucksData.reduce((acc, t) => acc + t.chargeableLDM, 0);
 
       document.getElementById('tot-pallets').innerText = totalPallets;
       document.getElementById('tot-weight').innerText = `${totalWeight.toLocaleString('es-ES')} kg`;
-      document.getElementById('tot-ldm-real').innerText = `${totalRealLdm.toFixed(2)} m`;
-      document.getElementById('tot-ldm-theor').innerText = `${totalTheorLdm.toFixed(2)} m`;
-      document.getElementById('badge-trucks').innerText = `${trucks.length} ${trucks.length === 1 ? 'Camión' : 'Camiones'}`;
+      document.getElementById('tot-ldm-real').innerText = `${totalPhysicalLDM.toFixed(2)} m`;
+      document.getElementById('tot-ldm-weight').innerText = `${totalWeightLDM.toFixed(2)} m (${totalWeight.toLocaleString('es-ES')} / ${ratioLdm})`;
+      document.getElementById('tot-ldm-chargeable').innerText = `${totalChargeableLDM.toFixed(2)} LDM`;
+      document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Camión' : 'Camiones'}`;
 
+      // Lista de grupos
       const groupList = document.getElementById('pallet-group-list');
       if (palletGroups.length === 0) {
         groupList.innerHTML = `<p class="text-slate-400 italic text-center py-2">Sin mercancía añadida</p>`;
       } else {
-        groupList.innerHTML = palletGroups.map(g => `
-          <div class="flex items-center justify-between p-2 rounded border border-slate-100 bg-slate-50">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background-color: ${g.color}"></span>
-              <div>
-                <span class="font-semibold text-slate-700">${g.name}</span>
-                <span class="text-[10px] text-slate-500 block">${g.qty} uds | ${g.length}×${g.width}m | ${g.weight} kg/ud</span>
+        groupList.innerHTML = palletGroups.map(g => {
+          const partWeight = g.qty * g.weight;
+          const partWeightLdm = partWeight / ratioLdm;
+          return `
+            <div class="flex items-center justify-between p-2 rounded border border-slate-100 bg-slate-50">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${g.color}"></span>
+                <div>
+                  <span class="font-semibold text-slate-700">${g.name}</span>
+                  <span class="text-[10px] text-slate-500 block">
+                    ${g.qty} uds | ${g.length}×${g.width}m | ${g.weight} kg/ud (${partWeight.toLocaleString('es-ES')} kg = <strong>${partWeightLdm.toFixed(2)} LDM por peso</strong>)
+                  </span>
+                </div>
               </div>
+              <button onclick="removeGroup(${g.id})" class="text-rose-500 hover:text-rose-700 p-1">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </div>
-            <button onclick="removeGroup(${g.id})" class="text-rose-500 hover:text-rose-700 p-1">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
+      // Render Camiones
       const container = document.getElementById('trucks-container');
       container.innerHTML = '';
 
-      trucks.forEach(truck => {
-        const weightPct = Math.min(100, (truck.currentWeight / truck.maxWeight) * 100);
-        const ldmPct = Math.min(100, (truck.usedLDM / truck.maxL) * 100);
+      trucksData.forEach(truck => {
+        const weightPct = Math.min(100, (truck.weight / maxWeight) * 100);
+        const ldmPct = Math.min(100, (truck.physicalLDM / truckL) * 100);
 
         const card = document.createElement('div');
         card.className = "bg-white p-5 rounded-xl border border-slate-200 shadow-sm";
 
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between border-b pb-3 mb-4 gap-2">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="bg-slate-900 text-white font-bold text-xs px-2.5 py-1 rounded">Camión #${truck.index}</span>
-                <span class="text-xs font-semibold text-slate-700">${truck.placements.length} bultos asignados</span>
-              </div>
+            <div class="flex items-center gap-2">
+              <span class="bg-slate-900 text-white font-bold text-xs px-2.5 py-1 rounded">Camión #${truck.index}</span>
+              <span class="text-xs font-semibold text-slate-700">${truck.items.length} bultos</span>
             </div>
-            <div class="flex items-center gap-4 text-xs font-medium">
-              <div>
-                <span class="text-slate-500">LDM Ocupados:</span>
-                <span class="font-bold text-blue-600 ml-1">${truck.usedLDM.toFixed(2)} / ${truck.maxL.toFixed(2)} m</span>
+            <div class="flex flex-wrap items-center gap-4 text-xs">
+              <div title="Metros de suelo ocupados">
+                <span class="text-slate-500">LDM Suelo:</span>
+                <span class="font-bold text-slate-700 ml-1 font-mono">${truck.physicalLDM.toFixed(2)} m</span>
+              </div>
+              <div title="Peso dividido entre ratio ${ratioLdm}">
+                <span class="text-slate-500">LDM Peso:</span>
+                <span class="font-bold text-amber-700 ml-1 font-mono">${truck.weightLDM.toFixed(2)} m</span>
+              </div>
+              <div class="bg-blue-50 px-2 py-1 rounded border border-blue-200" title="El mayor de ambos para facturación">
+                <span class="text-blue-700 font-bold">LDM Tasables:</span>
+                <span class="font-bold text-blue-900 ml-1 font-mono">${truck.chargeableLDM.toFixed(2)} m</span>
               </div>
               <div>
                 <span class="text-slate-500">Peso:</span>
-                <span class="font-bold ${truck.currentWeight > truck.maxWeight ? 'text-rose-600' : 'text-slate-800'} ml-1">
-                  ${truck.currentWeight.toLocaleString('es-ES')} / ${truck.maxWeight.toLocaleString('es-ES')} kg
+                <span class="font-bold ${truck.weight > maxWeight ? 'text-rose-600' : 'text-slate-800'} ml-1 font-mono">
+                  ${truck.weight.toLocaleString('es-ES')} / ${maxWeight.toLocaleString('es-ES')} kg
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Progreso -->
+          <!-- Barras de Progreso -->
           <div class="grid grid-cols-2 gap-4 mb-4 text-[11px]">
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-500">Ocupación Longitudinal (13.60 m)</span>
+                <span class="text-slate-500">Ocupación Longitudinal Suelo (${truckL.toFixed(2)} m)</span>
                 <span class="font-semibold text-slate-700">${ldmPct.toFixed(1)}%</span>
               </div>
               <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -446,7 +482,7 @@
             </div>
             <div>
               <div class="flex justify-between mb-1">
-                <span class="text-slate-500">Carga Útil (${truck.maxWeight.toLocaleString('es-ES')} kg)</span>
+                <span class="text-slate-500">Carga Útil (${maxWeight.toLocaleString('es-ES')} kg)</span>
                 <span class="font-semibold ${weightPct >= 100 ? 'text-rose-600 font-bold' : 'text-slate-700'}">${weightPct.toFixed(1)}%</span>
               </div>
               <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -458,56 +494,58 @@
           <!-- Plano 2D Escala Real con Reglas X e Y -->
           <div class="overflow-x-auto pb-2">
             <div class="min-w-[760px]">
-              <!-- Regla Superior de Longitud (X) -->
               <div class="flex justify-between text-[10px] text-slate-500 font-mono mb-1 pl-14 pr-2">
                 <span>0.0 m (Cabina)</span>
                 <span>3.4 m</span>
                 <span>6.8 m</span>
                 <span>10.2 m</span>
-                <span>${truck.maxL.toFixed(2)} m (Puerta)</span>
+                <span>${truckL.toFixed(2)} m (Puerta)</span>
               </div>
 
               <div class="flex items-stretch">
-                <!-- Regla Lateral de Anchura (Y) -->
                 <div class="w-14 flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2 text-right select-none py-1">
                   <span>0.0 m</span>
                   <span>0.80 m</span>
                   <span>1.60 m</span>
-                  <span>${truck.maxW.toFixed(2)} m</span>
+                  <span>${truckW.toFixed(2)} m</span>
                 </div>
 
-                <!-- Caja del Remolque -->
-                <div class="relative flex-1 border-4 border-slate-700 rounded-lg bg-slate-100 truck-canvas" style="height: 175px;">
+                <!-- Caja del Camión Dropzone -->
+                <div id="truck-box-${truck.index}" 
+                     data-truck-index="${truck.index}"
+                     class="truck-dropzone relative flex-1 border-4 border-slate-700 rounded-lg bg-slate-100 truck-canvas" 
+                     style="height: 180px;">
                   
-                  <!-- Cota de LDM ocupados -->
+                  <!-- Cota de LDM ocupados físicos -->
                   <div class="absolute top-0 bottom-0 left-0 bg-blue-500/10 border-r-2 border-blue-600 pointer-events-none transition-all duration-300 z-10"
-                       style="width: ${(truck.usedLDM / truck.maxL) * 100}%">
+                       style="width: ${(truck.physicalLDM / truckL) * 100}%">
                     <span class="absolute top-1 right-1.5 bg-blue-600 text-white text-[10px] font-mono px-1 rounded shadow">
-                      ${truck.usedLDM.toFixed(2)} m LDM
+                      ${truck.physicalLDM.toFixed(2)} m Suelo
                     </span>
                   </div>
 
-                  <!-- Línea de cota máxima 2.44m de ancho de referencia -->
+                  <!-- Palés -->
                   <div class="absolute inset-0">
-                    ${truck.placements.map(p => {
-                      const left = (p.y / truck.maxL) * 100;
-                      const top = (p.x / truck.maxW) * 100;
-                      const width = (p.l / truck.maxL) * 100;
-                      const height = (p.w / truck.maxW) * 100;
+                    ${truck.items.map(it => {
+                      const left = (it.y / truckL) * 100;
+                      const top = (it.x / truckW) * 100;
+                      const width = (it.length / truckL) * 100;
+                      const height = (it.width / truckW) * 100;
 
                       return `
-                        <div onclick="rotateItem('${p.item.id}')"
-                             title="${p.item.name}: Largo ${p.l.toFixed(2)}m × Ancho ${p.w.toFixed(2)}m (${p.item.weight} kg) - Clic para girar 90°"
-                             class="absolute flex flex-col items-center justify-center cursor-pointer select-none transition-transform hover:scale-[1.02] hover:z-20 border border-black/30 text-white font-medium shadow-sm overflow-hidden"
+                        <div id="${it.id}"
+                             draggable="true"
+                             title="${it.name}: ${it.length.toFixed(2)}×${it.width.toFixed(2)}m, ${it.weight} kg&#10;• Clic para girar&#10;• Arrastra para mover"
+                             class="pallet-drag absolute flex flex-col items-center justify-center cursor-move border border-black/30 text-white font-medium shadow-sm hover:ring-2 hover:ring-yellow-400 hover:z-30 transition-shadow overflow-hidden"
                              style="
                                left: ${left}%;
                                top: ${top}%;
                                width: ${width}%;
                                height: ${height}%;
-                               background-color: ${p.item.color};
+                               background-color: ${it.color};
                              ">
-                          <span class="text-[10px] font-bold leading-none truncate px-0.5">${p.l.toFixed(2)}×${p.w.toFixed(2)}m</span>
-                          <span class="text-[9px] opacity-90 leading-none mt-0.5">${p.item.weight}kg</span>
+                          <span class="text-[10px] font-bold leading-none truncate px-0.5">${it.length.toFixed(2)}×${it.width.toFixed(2)}m</span>
+                          <span class="text-[9px] opacity-90 leading-none mt-0.5">${it.weight}kg</span>
                         </div>
                       `;
                     }).join('')}
@@ -519,6 +557,66 @@
         `;
 
         container.appendChild(card);
+      });
+
+      setupDragAndDrop();
+    }
+
+    // Lógica Drag & Drop interactivo
+    function setupDragAndDrop() {
+      const pallets = document.querySelectorAll('.pallet-drag');
+      const dropzones = document.querySelectorAll('.truck-dropzone');
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+
+      pallets.forEach(p => {
+        p.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', p.id);
+          p.classList.add('opacity-50');
+        });
+
+        p.addEventListener('dragend', () => {
+          p.classList.remove('opacity-50');
+        });
+
+        // Giro con clic normal
+        p.addEventListener('click', (e) => {
+          e.stopPropagation();
+          rotateItem(p.id);
+        });
+      });
+
+      dropzones.forEach(dz => {
+        dz.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        dz.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const itemId = e.dataTransfer.getData('text/plain');
+          const item = items.find(i => i.id === itemId);
+          if (!item) return;
+
+          const rect = dz.getBoundingClientRect();
+          const targetTruckIndex = parseInt(dz.getAttribute('data-truck-index'));
+
+          // Calcular posición relativa dentro del camión
+          const relX = e.clientX - rect.left;
+          const relY = e.clientY - rect.top;
+
+          let posX = (relX / rect.width) * truckL;
+          let posY = (relY / rect.height) * truckW;
+
+          // Ajustar límites
+          if (posX + item.length > truckL) posX = Math.max(0, truckL - item.length);
+          if (posY + item.width > truckW) posY = Math.max(0, truckW - item.width);
+
+          item.truckIndex = targetTruckIndex;
+          item.y = Math.max(0, posX);
+          item.x = Math.max(0, posY);
+
+          render();
+        });
       });
     }
   </script>
