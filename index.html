@@ -100,4 +100,694 @@
         </h2>
 
         <div class="grid grid-cols-3 gap-1.5 mb-2.5">
-          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500, '#000000')" class="border border-neutral-200 hover
+          <button type="button" onclick="setPreset(1.20, 0.80, 'Europalé', 500, '#000000')" class="border border-neutral-200 hover:border-red-600 hover:bg-neutral-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-neutral-800 text-[11px]">Europalé</div>
+            <div class="text-[9px] text-neutral-500 font-mono">1.2 × 0.8m</div>
+          </button>
+          <button type="button" onclick="setPreset(1.20, 1.00, 'Americano', 600, '#374151')" class="border border-neutral-200 hover:border-red-600 hover:bg-neutral-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-neutral-800 text-[11px]">Americano</div>
+            <div class="text-[9px] text-neutral-500 font-mono">1.2 × 1.0m</div>
+          </button>
+          <button type="button" onclick="setPreset(5.00, 2.00, 'Pieza 12t', 12000, '#DC2626')" class="border border-neutral-200 hover:border-red-600 hover:bg-red-50 rounded p-1.5 text-center text-xs transition">
+            <div class="font-bold text-red-600 text-[11px]">Pieza 12t</div>
+            <div class="text-[9px] text-neutral-500 font-mono">5.0 × 2.0m</div>
+          </button>
+        </div>
+
+        <form id="pallet-form" class="space-y-2.5 text-xs">
+          <div>
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Descripción</label>
+            <input type="text" id="p-name" value="Europalé" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" required />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Largo (m)</label>
+              <input type="text" id="p-length" value="1.20" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
+            </div>
+            <div>
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Ancho (m)</label>
+              <input type="text" id="p-width" value="0.80" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Cantidad</label>
+              <input type="number" id="p-qty" value="1" min="1" max="250" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
+            </div>
+            <div>
+              <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Peso unitario (kg)</label>
+              <input type="text" id="p-weight" value="500" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono focus:border-red-600 focus:outline-none" required />
+            </div>
+          </div>
+          <div>
+            <label class="block text-neutral-500 text-[11px] mb-0.5 font-medium">Color</label>
+            <div class="flex gap-2">
+              <input type="color" id="p-color" value="#000000" class="h-8 w-12 rounded border border-neutral-300 cursor-pointer p-0.5" />
+              <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded px-3 py-1.5 text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-plus text-[10px]"></i> Añadir al Camión
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Totales y Resumen -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
+          <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-calculator text-red-600"></i> Totales Expedición
+          </h2>
+          <span id="badge-trucks" class="bg-black text-white text-[11px] font-bold px-2 py-0.5 rounded font-mono">1 Camión</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center mb-2.5">
+          <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-500 font-semibold uppercase block">Bultos</span>
+            <span id="tot-pallets" class="text-sm font-extrabold text-black font-mono">0</span>
+          </div>
+          <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-500 font-semibold uppercase block">Peso Total</span>
+            <span id="tot-weight" class="text-sm font-extrabold text-black font-mono">0 kg</span>
+          </div>
+        </div>
+
+        <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200 space-y-1.5 text-xs">
+          <div class="flex justify-between items-center text-neutral-600">
+            <span>LDM Suelo:</span>
+            <span id="tot-ldm-real" class="font-bold font-mono text-black">0.00 m</span>
+          </div>
+          <div class="flex justify-between items-center text-neutral-600">
+            <span>LDM Peso (kg/1.750):</span>
+            <span id="tot-ldm-weight" class="font-bold font-mono text-red-600">0.00 m</span>
+          </div>
+          <div class="flex justify-between items-center border-t border-neutral-200 pt-1.5 text-black">
+            <span class="font-extrabold text-xs uppercase">LDM Tasables:</span>
+            <span id="tot-ldm-chargeable" class="font-mono text-base font-extrabold text-red-600">0.00 LDM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partidas -->
+      <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
+        <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Partidas Introducidas</h2>
+        <div id="pallet-group-list" class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1"></div>
+      </div>
+    </div>
+
+    <!-- Columna Principal Tráiler -->
+    <div class="xl:col-span-9 space-y-4">
+      
+      <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-4 text-neutral-700">
+          <span class="flex items-center gap-1.5 font-medium">
+            <i class="fa-solid fa-arrows-rotate text-red-600"></i> Clic: <strong>Girar 90°</strong>
+          </span>
+          <span class="text-neutral-300">|</span>
+          <span class="flex items-center gap-1.5 font-medium">
+            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Ajuste a ras de otros palés</strong>
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-repack" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3 py-1.5 rounded font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Ordenar
+          </button>
+          <button id="btn-rotate-all" class="bg-neutral-100 hover:bg-neutral-200 text-black px-3 py-1.5 rounded font-bold transition flex items-center gap-1.5 border border-neutral-300">
+            <i class="fa-solid fa-rotate"></i> Girar Todos
+          </button>
+        </div>
+      </div>
+
+      <div id="trucks-container" class="space-y-4 w-full"></div>
+    </div>
+  </main>
+
+  <script>
+    let palletGroups = [];
+    let items = [];
+
+    const form = document.getElementById('pallet-form');
+    const truckLenInput = document.getElementById('truck-length');
+    const truckWidInput = document.getElementById('truck-width');
+    const truckMaxWeightInput = document.getElementById('truck-max-weight');
+    const ratioLdmInput = document.getElementById('ratio-ldm');
+
+    function parseNum(val, defaultVal = 0) {
+      if (typeof val === 'number') return val;
+      if (!val) return defaultVal;
+      const clean = val.toString().replace(',', '.');
+      const parsed = parseFloat(clean);
+      return isNaN(parsed) ? defaultVal : parsed;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-alert');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    function setPreset(l, w, name, weight, color) {
+      document.getElementById('p-length').value = l.toFixed(2);
+      document.getElementById('p-width').value = w.toFixed(2);
+      document.getElementById('p-name').value = name;
+      document.getElementById('p-weight').value = weight;
+      if (color) document.getElementById('p-color').value = color;
+    }
+
+    // Inicia COMPLETAMENTE VACÍO
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+    });
+
+    document.getElementById('btn-load-demo').addEventListener('click', () => {
+      palletGroups = [];
+      items = [];
+      addPalletBatch('Europalé Estándar', 1.20, 0.80, 33, 500, '#000000');
+      autoArrange();
+      render();
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('p-name').value;
+      const length = parseNum(document.getElementById('p-length').value, 1.2);
+      const width = parseNum(document.getElementById('p-width').value, 0.8);
+      const qty = parseInt(document.getElementById('p-qty').value) || 1;
+      const weight = parseNum(document.getElementById('p-weight').value, 500);
+      const color = document.getElementById('p-color').value;
+
+      addPalletBatch(name, length, width, qty, weight, color);
+      autoArrange();
+      render();
+    });
+
+    [truckLenInput, truckWidInput, truckMaxWeightInput, ratioLdmInput].forEach(inp => {
+      inp.addEventListener('input', () => {
+        render();
+      });
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      palletGroups = [];
+      items = [];
+      render();
+    });
+
+    document.getElementById('btn-repack').addEventListener('click', () => {
+      autoArrange();
+      render();
+    });
+
+    document.getElementById('btn-rotate-all').addEventListener('click', () => {
+      items.forEach(item => {
+        const tmp = item.length;
+        item.length = item.width;
+        item.width = tmp;
+      });
+      autoArrange();
+      render();
+    });
+
+    function addPalletBatch(name, length, width, qty, weight, color) {
+      const groupId = Date.now() + Math.random();
+      palletGroups.push({ id: groupId, name, length, width, qty, weight, color });
+
+      for (let i = 0; i < qty; i++) {
+        items.push({
+          id: 'item_' + Math.random().toString(36).substr(2, 9),
+          groupId,
+          name,
+          length,
+          width,
+          weight,
+          color,
+          truckIndex: 1,
+          x: 0,
+          y: 0
+        });
+      }
+    }
+
+    function removeGroup(groupId) {
+      palletGroups = palletGroups.filter(g => g.id !== groupId);
+      items = items.filter(it => it.groupId !== groupId);
+      autoArrange();
+      render();
+    }
+
+    function isOverlapping(x1, y1, w1, h1, x2, y2, w2, h2) {
+      const tol = 0.002;
+      return (
+        x1 + tol < x2 + w2 &&
+        x1 + w1 - tol > x2 &&
+        y1 + tol < y2 + h2 &&
+        y1 + h1 - tol > y2
+      );
+    }
+
+    function snapAndValidate(item, targetX, targetY, truckIndex, newLen = null, newWid = null) {
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+
+      const len = newLen !== null ? newLen : item.length;
+      const wid = newWid !== null ? newWid : item.width;
+
+      const snapThreshold = 0.12;
+
+      let snappedX = targetX;
+      let snappedY = targetY;
+
+      // Paredes
+      if (Math.abs(snappedX - 0) < snapThreshold) snappedX = 0;
+      if (Math.abs(snappedX + len - truckL) < snapThreshold) snappedX = truckL - len;
+
+      if (Math.abs(snappedY - 0) < snapThreshold) snappedY = 0;
+      if (Math.abs(snappedY + wid - truckW) < snapThreshold) snappedY = truckW - wid;
+
+      // Otros palés
+      const others = items.filter(it => it.truckIndex === truckIndex && it.id !== item.id);
+
+      others.forEach(other => {
+        if (Math.abs(snappedX - (other.x + other.length)) < snapThreshold) {
+          snappedX = other.x + other.length;
+        }
+        if (Math.abs((snappedX + len) - other.x) < snapThreshold) {
+          snappedX = other.x - len;
+        }
+
+        if (Math.abs(snappedY - (other.y + other.width)) < snapThreshold) {
+          snappedY = other.y + other.width;
+        }
+        if (Math.abs((snappedY + wid) - other.y) < snapThreshold) {
+          snappedY = other.y - wid;
+        }
+      });
+
+      snappedX = Math.max(0, Math.min(truckL - len, snappedX));
+      snappedY = Math.max(0, Math.min(truckW - wid, snappedY));
+
+      const collides = others.some(other => 
+        isOverlapping(snappedX, snappedY, len, wid, other.x, other.y, other.length, other.width)
+      );
+
+      return {
+        valid: !collides,
+        x: snappedX,
+        y: snappedY
+      };
+    }
+
+    function rotateItem(itemId) {
+      const item = items.find(i => i.id === itemId);
+      if (!item) return;
+
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const newLen = item.width;
+      const newWid = item.length;
+
+      if (newWid > truckW + 0.01) {
+        showToast(`Imposible girar: el ancho (${newWid.toFixed(2)}m) supera el ancho del camión (${truckW.toFixed(2)}m).`);
+        return;
+      }
+
+      let check = snapAndValidate(item, item.x, item.y, item.truckIndex, newLen, newWid);
+
+      if (!check.valid) {
+        const offsets = [
+          { dx: -(newLen - item.length), dy: 0 },
+          { dx: 0, dy: -(newWid - item.width) },
+          { dx: item.length, dy: 0 },
+          { dx: -newLen, dy: 0 }
+        ];
+
+        for (const off of offsets) {
+          check = snapAndValidate(item, item.x + off.dx, item.y + off.dy, item.truckIndex, newLen, newWid);
+          if (check.valid) break;
+        }
+      }
+
+      if (!check.valid) {
+        showToast('Giro bloqueado: colisiona con otro palé o la pared.');
+        return;
+      }
+
+      item.length = newLen;
+      item.width = newWid;
+      item.x = check.x;
+      item.y = check.y;
+      render();
+    }
+
+    function autoArrange() {
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
+
+      let currentTruck = 1;
+      let currentX = 0;
+      let currentY = 0;
+      let currentColThickness = 0;
+      let currentWeight = 0;
+
+      items.forEach(item => {
+        const itemLen = item.length;
+        const itemWid = item.width;
+
+        const fitsInWidth = (currentY + itemWid <= truckW + 0.005);
+
+        if (fitsInWidth) {
+          const wouldExceedLen = (currentX + Math.max(currentColThickness, itemLen) > truckL + 0.005);
+          const wouldExceedWgt = (currentWeight + item.weight > maxWeight);
+
+          if (wouldExceedLen || wouldExceedWgt) {
+            currentTruck++;
+            currentX = 0;
+            currentY = 0;
+            currentColThickness = 0;
+            currentWeight = 0;
+          }
+        } else {
+          currentX += currentColThickness;
+          currentY = 0;
+          currentColThickness = 0;
+
+          const wouldExceedLen = (currentX + itemLen > truckL + 0.005);
+          const wouldExceedWgt = (currentWeight + item.weight > maxWeight);
+
+          if (wouldExceedLen || wouldExceedWgt) {
+            currentTruck++;
+            currentX = 0;
+            currentY = 0;
+            currentColThickness = 0;
+            currentWeight = 0;
+          }
+        }
+
+        item.truckIndex = currentTruck;
+        item.x = currentX;
+        item.y = currentY;
+
+        currentWeight += item.weight;
+        currentY += itemWid;
+        if (itemLen > currentColThickness) {
+          currentColThickness = itemLen;
+        }
+      });
+    }
+
+    function render() {
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
+      const ratioLdm = parseNum(ratioLdmInput.value, 1750);
+
+      // Si no hay items, creamos al menos 1 camión vacío
+      const maxTruckId = items.length === 0 ? 1 : items.reduce((max, it) => Math.max(max, it.truckIndex || 1), 1);
+      const trucksData = [];
+
+      for (let t = 1; t <= maxTruckId; t++) {
+        const truckItems = items.filter(it => it.truckIndex === t);
+        let truckWeight = 0;
+        let maxReach = 0;
+
+        truckItems.forEach(it => {
+          truckWeight += it.weight;
+          const reach = it.x + it.length;
+          if (reach > maxReach) maxReach = reach;
+        });
+
+        const physicalLDM = maxReach;
+        const weightLDM = truckWeight / ratioLdm;
+        const chargeableLDM = Math.max(physicalLDM, weightLDM);
+
+        trucksData.push({
+          index: t,
+          items: truckItems,
+          weight: truckWeight,
+          physicalLDM,
+          weightLDM,
+          chargeableLDM
+        });
+      }
+
+      // Totales
+      const totalPallets = items.length;
+      const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
+      const totalPhysicalLDM = trucksData.reduce((acc, t) => acc + t.physicalLDM, 0);
+      const totalWeightLDM = totalWeight / ratioLdm;
+      const totalChargeableLDM = trucksData.reduce((acc, t) => acc + t.chargeableLDM, 0);
+
+      document.getElementById('tot-pallets').innerText = totalPallets;
+      document.getElementById('tot-weight').innerText = `${totalWeight.toLocaleString('es-ES')} kg`;
+      document.getElementById('tot-ldm-real').innerText = `${totalPhysicalLDM.toFixed(2)} m`;
+      document.getElementById('tot-ldm-weight').innerText = `${totalWeightLDM.toFixed(2)} m`;
+      document.getElementById('tot-ldm-chargeable').innerText = `${totalChargeableLDM.toFixed(2)} LDM`;
+      document.getElementById('badge-trucks').innerText = `${trucksData.length} ${trucksData.length === 1 ? 'Camión' : 'Camiones'}`;
+
+      // Lista lateral
+      const groupList = document.getElementById('pallet-group-list');
+      if (palletGroups.length === 0) {
+        groupList.innerHTML = `<p class="text-neutral-400 italic text-center py-3">El camión está vacío. Añade bultos con el formulario o pulsa "Cargar 33 Plts".</p>`;
+      } else {
+        groupList.innerHTML = palletGroups.map(g => {
+          const partWeight = g.qty * g.weight;
+          const partWeightLdm = partWeight / ratioLdm;
+          return `
+            <div class="flex items-center justify-between p-1.5 rounded border border-neutral-200 bg-neutral-50">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${g.color}"></span>
+                <div>
+                  <span class="font-bold text-neutral-800">${g.name}</span>
+                  <span class="text-[9px] text-neutral-500 font-mono block">
+                    ${g.qty} uds | ${g.length}×${g.width}m | ${g.weight} kg (${partWeightLdm.toFixed(2)} LDM peso)
+                  </span>
+                </div>
+              </div>
+              <button onclick="removeGroup(${g.id})" class="text-red-500 hover:text-red-700 p-1">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Camiones
+      const container = document.getElementById('trucks-container');
+      container.innerHTML = '';
+
+      trucksData.forEach(truck => {
+        const weightPct = Math.min(100, (truck.weight / maxWeight) * 100);
+        const ldmPct = Math.min(100, (truck.physicalLDM / truckL) * 100);
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-xl border border-neutral-300 shadow-sm w-full";
+
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between border-b border-neutral-200 pb-2 mb-3 gap-2">
+            <div class="flex items-center gap-2">
+              <span class="bg-black text-white font-extrabold text-xs px-2.5 py-1 rounded font-mono">
+                Camión #${truck.index}
+              </span>
+              <span class="text-xs text-neutral-500 font-medium">
+                ${truck.items.length === 0 ? 'Plataforma vacía (100% disponible)' : `${truck.items.length} bultos estibados`}
+              </span>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 text-xs font-mono">
+              <div class="bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+                <span class="text-neutral-500">Suelo:</span>
+                <span class="font-bold text-black ml-1">${truck.physicalLDM.toFixed(2)} / ${truckL.toFixed(2)} m</span>
+              </div>
+              <div class="bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+                <span class="text-neutral-500">Peso:</span>
+                <span class="font-bold ${truck.weight > maxWeight ? 'text-red-600' : 'text-black'} ml-1">
+                  ${truck.weight.toLocaleString('es-ES')} / ${maxWeight.toLocaleString('es-ES')} kg
+                </span>
+              </div>
+              <div class="bg-red-50 px-2.5 py-0.5 rounded border border-red-300">
+                <span class="text-red-700 font-bold">LDM Tasable:</span>
+                <span class="font-extrabold text-red-600 text-sm ml-1">${truck.chargeableLDM.toFixed(2)} LDM</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-3 text-[10px]">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-neutral-500">Ocupación Longitudinal Suelo</span>
+                <span class="font-bold font-mono">${ldmPct.toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                <div class="bg-black h-2 transition-all duration-300" style="width: ${ldmPct}%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-neutral-500">Carga Útil</span>
+                <span class="font-bold font-mono ${weightPct >= 100 ? 'text-red-600' : 'text-neutral-800'}">${weightPct.toFixed(1)}%</span>
+              </div>
+              <div class="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                <div class="${weightPct >= 100 ? 'bg-red-600' : 'bg-neutral-800'} h-2 transition-all duration-300" style="width: ${weightPct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tráiler Panorámico a Escala -->
+          <div class="w-full">
+            <div class="flex justify-between text-[10px] text-neutral-400 font-mono mb-1 pl-12 pr-2">
+              <span>0.0 m (Frente)</span>
+              <span>2.7 m</span>
+              <span>5.4 m</span>
+              <span>8.1 m</span>
+              <span>10.8 m</span>
+              <span>${truckL.toFixed(2)} m (Puerta)</span>
+            </div>
+
+            <div class="flex items-stretch w-full">
+              <div class="w-12 flex flex-col justify-between text-[10px] text-neutral-400 font-mono pr-2 text-right select-none py-1">
+                <span>0.0</span>
+                <span>0.8</span>
+                <span>1.6</span>
+                <span>${truckW.toFixed(2)}m</span>
+              </div>
+
+              <!-- Cabina -->
+              <div class="w-6 bg-black rounded-l border-y-2 border-l-2 border-neutral-900 flex flex-col items-center justify-center text-[9px] text-white font-mono uppercase tracking-widest" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                CABINA
+              </div>
+
+              <!-- Plataforma del Camión Dropzone -->
+              <div id="truck-box-${truck.index}" 
+                   data-truck-index="${truck.index}"
+                   class="truck-dropzone relative flex-1 border-2 border-black rounded-r truck-deck" 
+                   style="height: 220px;">
+                
+                <!-- Mensaje de camión vacío si no hay carga -->
+                ${truck.items.length === 0 ? `
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-40">
+                    <i class="fa-solid fa-truck-ramp-box text-3xl text-neutral-400 mb-1"></i>
+                    <span class="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">Semirremolque Vacío (13.60 × 2.44 m)</span>
+                    <span class="text-[10px] text-neutral-400">Añade mercancía desde el panel de la izquierda</span>
+                  </div>
+                ` : ''}
+
+                <!-- Cota Visual LDM (solo si hay carga) -->
+                ${truck.physicalLDM > 0 ? `
+                  <div class="absolute top-0 bottom-0 left-0 bg-red-600/10 border-r-2 border-red-600 pointer-events-none transition-all duration-300 z-10"
+                       style="width: ${(truck.physicalLDM / truckL) * 100}%">
+                    <span class="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow">
+                      ${truck.physicalLDM.toFixed(2)} m LDM
+                    </span>
+                  </div>
+                ` : ''}
+
+                <!-- Palés Renderizados -->
+                <div class="absolute inset-0">
+                  ${truck.items.map(it => {
+                    const left = (it.x / truckL) * 100;
+                    const top = (it.y / truckW) * 100;
+                    const width = (it.length / truckL) * 100;
+                    const height = (it.width / truckW) * 100;
+
+                    return `
+                      <div id="${it.id}"
+                           draggable="true"
+                           title="${it.name}&#10;Dimensiones: ${it.length.toFixed(2)}m largo × ${it.width.toFixed(2)}m ancho&#10;Peso: ${it.weight} kg&#10;• Clic: Girar 90°&#10;• Arrastra: Mover (se pega a ras)"
+                           class="pallet-card absolute flex flex-col items-center justify-center cursor-move text-white font-medium overflow-hidden rounded-[2px] border border-white/40"
+                           style="
+                             left: ${left}%;
+                             top: ${top}%;
+                             width: ${width}%;
+                             height: ${height}%;
+                             background-color: ${it.color};
+                           ">
+                        <span class="text-[10px] font-bold leading-tight font-mono tracking-tight truncate px-1">${it.length.toFixed(2)}×${it.width.toFixed(2)}</span>
+                        <span class="text-[9px] font-semibold opacity-90 leading-none mt-0.5 font-mono">${it.weight}kg</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      setupDragAndDrop();
+    }
+
+    function setupDragAndDrop() {
+      const pallets = document.querySelectorAll('.pallet-card');
+      const dropzones = document.querySelectorAll('.truck-dropzone');
+      const truckL = parseNum(truckLenInput.value, 13.6);
+      const truckW = parseNum(truckWidInput.value, 2.44);
+
+      let dragOffsetMetersX = 0;
+      let dragOffsetMetersY = 0;
+
+      pallets.forEach(p => {
+        p.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', p.id);
+          p.classList.add('opacity-40');
+
+          const rect = p.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+
+          dragOffsetMetersX = (offsetX / rect.width);
+          dragOffsetMetersY = (offsetY / rect.height);
+        });
+
+        p.addEventListener('dragend', () => {
+          p.classList.remove('opacity-40');
+        });
+
+        p.addEventListener('click', (e) => {
+          e.stopPropagation();
+          rotateItem(p.id);
+        });
+      });
+
+      dropzones.forEach(dz => {
+        dz.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        dz.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const itemId = e.dataTransfer.getData('text/plain');
+          const item = items.find(i => i.id === itemId);
+          if (!item) return;
+
+          const rect = dz.getBoundingClientRect();
+          const targetTruckIndex = parseInt(dz.getAttribute('data-truck-index'));
+
+          const clickX = e.clientX - rect.left;
+          const clickY = e.clientY - rect.top;
+
+          const rawMetersX = (clickX / rect.width) * truckL - (dragOffsetMetersX * item.length);
+          const rawMetersY = (clickY / rect.height) * truckW - (dragOffsetMetersY * item.width);
+
+          const result = snapAndValidate(item, rawMetersX, rawMetersY, targetTruckIndex);
+
+          if (!result.valid) {
+            showToast('No se puede soltar ahí: colisiona con otro palé.');
+            return;
+          }
+
+          item.truckIndex = targetTruckIndex;
+          item.x = result.x;
+          item.y = result.y;
+
+          render();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
