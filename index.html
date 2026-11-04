@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
-  <!-- Leaflet para el Mapa Interactivo -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -48,7 +47,7 @@
 </head>
 <body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col relative">
 
-  <!-- MODAL DE PAGO / PAYWALL (Bloqueo si no ha pagado 20 €) -->
+  <!-- MODAL DE PAGO / PAYWALL -->
   <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-2xl p-6 sm:p-8 shadow-2xl border border-neutral-200 text-center relative overflow-hidden">
       <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
@@ -92,13 +91,11 @@
     </div>
   </div>
 
-  <!-- Toast flotante -->
   <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
     <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
     <span id="toast-msg">Mensaje</span>
   </div>
 
-  <!-- Cabecera -->
   <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-40 px-4 py-2.5 shadow-md no-print">
     <div class="w-full flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -137,13 +134,9 @@
     </div>
   </header>
 
-  <!-- ========================================== -->
-  <!-- VISTA 1: PLANIFICADOR 2D                   -->
-  <!-- ========================================== -->
+  <!-- VISTA 1: PLANIFICADOR 2D -->
   <main id="view-planner" class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1">
-    
     <div class="xl:col-span-3 space-y-4">
-      
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -171,7 +164,6 @@
         </div>
       </div>
 
-      <!-- Añadir Mercancía -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <h2 class="text-xs font-bold text-black uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-red-600"></span> Añadir Bultos
@@ -229,7 +221,6 @@
         </form>
       </div>
 
-      <!-- Resumen -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -275,9 +266,7 @@
       </div>
     </div>
 
-    <!-- Columna Principal Tráiler -->
     <div class="xl:col-span-9 space-y-4">
-      
       <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-4 text-neutral-700">
           <span class="flex items-center gap-1.5 font-medium">
@@ -302,13 +291,10 @@
     </div>
   </main>
 
-  <!-- ========================================== -->
-  <!-- VISTA 2: RUTA & MAPA INTERACTIVO           -->
-  <!-- ========================================== -->
+  <!-- VISTA 2: RUTA & MAPA INTERACTIVO -->
   <main id="view-map" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Panel de paradas -->
       <div class="lg:col-span-5 space-y-4">
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
@@ -347,7 +333,6 @@
           </div>
         </div>
 
-        <!-- Métricas del viaje -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm grid grid-cols-3 gap-2 text-center font-mono">
           <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200">
             <span class="text-[9px] text-neutral-400 uppercase font-sans block mb-1">Distancia Total</span>
@@ -364,7 +349,6 @@
         </div>
       </div>
 
-      <!-- Mapa interactivo -->
       <div class="lg:col-span-7">
         <div class="bg-white p-3 rounded-xl border border-neutral-300 shadow-sm h-[580px] flex flex-col">
           <div id="leaflet-map" class="w-full flex-1 rounded-lg border border-neutral-200"></div>
@@ -377,16 +361,11 @@
     </div>
   </main>
 
-  <!-- ========================================== -->
-  <!-- VISTA 3: COTIZADOR & GENERADOR DE PDF      -->
-  <!-- ========================================== -->
+  <!-- VISTA 3: COTIZADOR & GENERADOR DE PDF -->
   <main id="view-quote" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
-    
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Panel de Control Interno -->
       <div class="lg:col-span-5 space-y-4 no-print">
-        
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <div>
@@ -524,9 +503,7 @@
         </button>
       </div>
 
-      <!-- VISTA IMPRIMIBLE / PDF OFICIAL PARA EL CLIENTE -->
       <div class="lg:col-span-7">
-        
         <div id="print-area" class="bg-white p-6 sm:p-8 rounded-xl border-2 border-neutral-800 shadow-md text-neutral-900 font-sans text-xs">
           
           <div class="flex items-start justify-between border-b-2 border-black pb-4 mb-4">
@@ -627,7 +604,6 @@
     </div>
   </main>
 
-  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO -->
   <script>
     const SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
     const SUPABASE_ANON_KEY = "TU_ANON_KEY_DE_SUPABASE";
@@ -691,7 +667,6 @@
     window.addEventListener('DOMContentLoaded', checkUserAccess);
   </script>
 
-  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS INTERNACIONALES -->
   <script>
     let palletGroups = [];
     let items = [];
@@ -717,10 +692,9 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    let pickupStops = [{ cp: '', city: '', country: 'ES' }];
-    let dropoffStops = [{ cp: '', city: '', country: 'ES' }];
+    let pickupStops = [{ cp: '', city: '', country: 'NL' }];
+    let dropoffStops = [{ cp: '', city: '', country: 'NL' }];
 
-    // Instancia del mapa Leaflet
     let leafletMap = null;
     let mapRouteLayer = null;
     let mapMarkersLayer = null;
@@ -750,18 +724,17 @@
     }
 
     function renderStopsInputs() {
-      // Renderizar en panel de Cotización y panel de Mapa en paralelo
       const pContainers = [document.getElementById('pickup-stops-container'), document.getElementById('map-pickup-stops-container')];
       const dContainers = [document.getElementById('dropoff-stops-container'), document.getElementById('map-dropoff-stops-container')];
 
       const pHTML = pickupStops.map((stop, idx) => `
-        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm" data-idx="${idx}">
           <span class="w-4 text-center font-mono font-bold text-emerald-800 text-[11px]">${idx + 1}.</span>
           <select onchange="updatePickupField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          <input type="text" value="${stop.city}" oninput="updatePickupField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updatePickupFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updatePickupFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -771,13 +744,13 @@
       `).join('');
 
       const dHTML = dropoffStops.map((stop, idx) => `
-        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm" data-idx="${idx}">
           <span class="w-4 text-center font-mono font-bold text-red-800 text-[11px]">${idx + 1}.</span>
           <select onchange="updateDropoffField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updateDropoffField(${idx}, 'cp', this.value)" placeholder="CP (ej. 4903)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          <input type="text" value="${stop.city}" oninput="updateDropoffField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updateDropoffFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 4903)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updateDropoffFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -790,6 +763,53 @@
       dContainers.forEach(c => { if (c) c.innerHTML = dHTML; });
 
       updateQuotation();
+    }
+
+    // Actualiza variables sin re-renderizar para no perder el foco
+    function updatePickupFieldSilent(idx, field, val) {
+      if (pickupStops[idx]) {
+        pickupStops[idx][field] = val;
+        // sincronizar el otro contenedor si existe
+        syncInputsAcrossTabs('pickup', idx, field, val);
+        updateQuotation();
+      }
+    }
+
+    function updateDropoffFieldSilent(idx, field, val) {
+      if (dropoffStops[idx]) {
+        dropoffStops[idx][field] = val;
+        syncInputsAcrossTabs('dropoff', idx, field, val);
+        updateQuotation();
+      }
+    }
+
+    function syncInputsAcrossTabs(type, idx, field, val) {
+      const containers = type === 'pickup' 
+        ? [document.getElementById('pickup-stops-container'), document.getElementById('map-pickup-stops-container')]
+        : [document.getElementById('dropoff-stops-container'), document.getElementById('map-dropoff-stops-container')];
+      
+      containers.forEach(cont => {
+        if (!cont) return;
+        const row = cont.querySelector(`div[data-idx="${idx}"]`);
+        if (!row) return;
+        if (field === 'cp') {
+          const inp = row.querySelectorAll('input')[0];
+          if (inp && inp !== document.activeElement) inp.value = val;
+        } else if (field === 'city') {
+          const inp = row.querySelectorAll('input')[1];
+          if (inp && inp !== document.activeElement) inp.value = val;
+        }
+      });
+    }
+
+    function updatePickupField(idx, field, val) {
+      pickupStops[idx][field] = val;
+      renderStopsInputs();
+    }
+
+    function updateDropoffField(idx, field, val) {
+      dropoffStops[idx][field] = val;
+      renderStopsInputs();
     }
 
     function addPickupStop() {
@@ -806,11 +826,6 @@
       }
     }
 
-    function updatePickupField(idx, field, val) {
-      pickupStops[idx][field] = val;
-      renderStopsInputs();
-    }
-
     function addDropoffStop() {
       const lastCountry = dropoffStops.length > 0 ? dropoffStops[dropoffStops.length - 1].country : 'ES';
       dropoffStops.push({ cp: '', city: '', country: lastCountry });
@@ -823,11 +838,6 @@
         dropoffStops.splice(idx, 1);
         renderStopsInputs();
       }
-    }
-
-    function updateDropoffField(idx, field, val) {
-      dropoffStops[idx][field] = val;
-      renderStopsInputs();
     }
 
     function setPreset(l, w, name, weight, color) {
@@ -949,8 +959,8 @@
     document.getElementById('btn-reset').addEventListener('click', () => {
       palletGroups = [];
       items = [];
-      pickupStops = [{ cp: '', city: '', country: 'ES' }];
-      dropoffStops = [{ cp: '', city: '', country: 'ES' }];
+      pickupStops = [{ cp: '', city: '', country: 'NL' }];
+      dropoffStops = [{ cp: '', city: '', country: 'NL' }];
       document.getElementById('ftl-km').value = 0;
       document.getElementById('route-reference').value = '';
       if (mapRouteLayer) mapRouteLayer.clearLayers();
@@ -1432,20 +1442,17 @@
       });
     }
 
-    // ============================================================
-    // BÚSQUEDA PRECISA POR CP EN TODA EUROPA (NL, DE, FR, ES...)
-    // ============================================================
+    // GEOCODIFICADOR PRECISO PARA TODA EUROPA
     async function geocodeStop(stop) {
-      const country = (stop.country || 'ES').toLowerCase();
+      const country = (stop.country || 'NL').toLowerCase();
       let cp = (stop.cp || '').trim();
       let city = (stop.city || '').trim();
 
       if (!cp && !city) return null;
 
-      // Limpiar prefijo de país si el usuario ya lo escribió (ej: "NL-3133" -> "3133")
       cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '');
 
-      // 1. Intento: Consulta estructurada por postalcode + país
+      // 1. Intento: postalcode + country
       try {
         let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
         if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
@@ -1458,10 +1465,10 @@
           return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
         }
       } catch (e) {
-        console.warn("Fallo en consulta estructurada:", e);
+        console.warn("Fallo búsqueda estructurada:", e);
       }
 
-      // 2. Intento: Búsqueda con nombre oficial de país
+      // 2. Intento: Fallback con nombre oficial
       try {
         const countryNames = {
           nl: 'Nederland',
@@ -1484,7 +1491,7 @@
           return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
         }
       } catch (e) {
-        console.warn("Fallo en consulta fallback:", e);
+        console.warn("Fallo búsqueda fallback:", e);
       }
 
       return null;
@@ -1528,13 +1535,11 @@
           const calculatedKm = Math.max(1, Math.round(route.distance / 1000));
           document.getElementById('ftl-km').value = calculatedKm;
 
-          // Actualizar métricas del mapa
           const hours = Math.floor(route.duration / 3600);
           const minutes = Math.round((route.duration % 3600) / 60);
           document.getElementById('map-stat-km').innerText = `${calculatedKm.toLocaleString('es-ES')} km`;
           document.getElementById('map-stat-time').innerText = `${hours}h ${minutes}m`;
 
-          // Dibujar en el mapa Leaflet
           if (leafletMap) {
             mapRouteLayer.clearLayers();
             mapMarkersLayer.clearLayers();
@@ -1543,7 +1548,6 @@
               style: { color: '#dc2626', weight: 5, opacity: 0.85 }
             }).addTo(mapRouteLayer);
 
-            // Marcadores de paradas
             points.forEach((pt, index) => {
               const isPickup = index < validPickups.length;
               const markerColor = isPickup ? '#059669' : '#dc2626';
