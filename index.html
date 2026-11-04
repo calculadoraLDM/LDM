@@ -3,13 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoadFlow | Planificador LDM & Cotizador</title>
+  <title>LoadFlow Pro | Estiba, Mapa de Ruta & Cotizador LDM</title>
+  
+  <!-- Tailwind CSS & Iconos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Leaflet Maps CSS & JS (100% libre, sin clave de API de Google) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Tipografías -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   
   <style>
     body { font-family: 'Inter', sans-serif; }
@@ -27,10 +35,17 @@
       touch-action: none;
     }
     .pallet-card:hover {
-      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.45);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
       z-index: 30 !important;
     }
+    #map-container {
+      min-height: 480px;
+      height: 100%;
+      border-radius: 0.75rem;
+      z-index: 10;
+    }
 
+    /* Estilos de Impresión Limpia (PDF) */
     @media print {
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
@@ -44,18 +59,18 @@
 </head>
 <body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col relative">
 
-  <!-- MODAL DE PAGO / PAYWALL (Bloqueo si no ha pagado 20 €) -->
-  <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- MODAL DE PAGO / PAYWALL (Opcional con Supabase) -->
+  <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-2xl p-6 sm:p-8 shadow-2xl border border-neutral-200 text-center relative overflow-hidden">
       <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
         <i class="fa-solid fa-truck-fast"></i>
       </div>
 
       <h2 class="text-xl font-extrabold text-neutral-900 uppercase tracking-tight">Acceso a LoadFlow Pro</h2>
-      <p class="text-xs text-neutral-500 mt-1 mb-6">Planificador de estiba 2D, cálculo de LDM y generador de cotizaciones en PDF</p>
+      <p class="text-xs text-neutral-500 mt-1 mb-6">Planificador de estiba 2D, cálculo de LDM, mapa europeo de rutas y cotizador</p>
 
       <div id="auth-step-login" class="space-y-4">
-        <p class="text-xs text-neutral-600 leading-relaxed">Inicia sesión con tu cuenta de Google para acceder o validar tu licencia de acceso de por vida.</p>
+        <p class="text-xs text-neutral-600 leading-relaxed">Inicia sesión con Google para validar tu licencia permanente.</p>
         <button onclick="loginWithGoogle()" class="w-full bg-neutral-900 hover:bg-black text-white font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-3 shadow-md border border-neutral-800">
           <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           <span>Continuar con Google</span>
@@ -64,13 +79,13 @@
 
       <div id="auth-step-pay" class="hidden space-y-4">
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-left text-xs">
-          <div class="text-neutral-500 text-[11px]">Sesión activa:</div>
+          <div class="text-neutral-500 text-[11px]">Cuenta activa:</div>
           <div id="user-display-email" class="font-bold text-neutral-900 truncate">usuario@gmail.com</div>
         </div>
 
         <div class="py-2">
           <div class="text-3xl font-extrabold text-neutral-900 font-mono">20 €</div>
-          <div class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Pago único • Acceso ilimitado de por vida</div>
+          <div class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Pago único • Acceso ilimitado</div>
         </div>
 
         <a id="btn-pay-stripe" href="#" target="_blank" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
@@ -80,7 +95,7 @@
 
         <div class="pt-2 flex justify-between items-center text-[11px]">
           <button onclick="checkUserAccess()" class="text-neutral-600 hover:text-black font-semibold underline">
-            <i class="fa-solid fa-rotate-right mr-1"></i> Ya he pagado, verificar
+            <i class="fa-solid fa-rotate-right mr-1"></i> Verificar pago
           </button>
           <button onclick="logout()" class="text-neutral-400 hover:text-red-600">Cerrar sesión</button>
         </div>
@@ -88,34 +103,41 @@
     </div>
   </div>
 
-  <!-- Toast flotante -->
+  <!-- Toast de Alerta Flotante -->
   <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
     <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
     <span id="toast-msg">Mensaje</span>
   </div>
 
-  <!-- Cabecera -->
+  <!-- Cabecera y Barra de Pestañas -->
   <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-40 px-4 py-2.5 shadow-md no-print">
     <div class="w-full flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Marca -->
       <div class="flex items-center gap-3">
         <div class="bg-red-600 text-white font-extrabold text-lg px-2.5 py-1 rounded tracking-tighter flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-truck-ramp-box"></i>
         </div>
         <div>
           <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">LoadFlow Pro</h1>
-          <p class="text-[11px] text-neutral-400 font-mono">Planificador de Estiba & Rutas Internacionales (Europa)</p>
+          <p class="text-[11px] text-neutral-400 font-mono">Planificador de Estiba, Rutas Europeas por CP & Cotización</p>
         </div>
       </div>
 
+      <!-- Selector de 3 Pestañas -->
       <nav class="flex items-center bg-neutral-900 p-1 rounded-lg border border-neutral-800">
         <button id="tab-btn-planner" onclick="switchTab('planner')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow">
-          <i class="fa-solid fa-layer-group text-[11px]"></i> Planificador 2D
+          <i class="fa-solid fa-layer-group text-[11px]"></i> <span>Planificador 2D</span>
+        </button>
+        <button id="tab-btn-route" onclick="switchTab('route')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
+          <i class="fa-solid fa-map-location-dot text-[11px]"></i> <span>Ruta & Mapa</span>
         </button>
         <button id="tab-btn-quote" onclick="switchTab('quote')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
-          <i class="fa-solid fa-file-invoice-dollar text-[11px]"></i> Cotización & PDF
+          <i class="fa-solid fa-file-invoice-dollar text-[11px]"></i> <span>Cotización & PDF</span>
         </button>
       </nav>
       
+      <!-- Acciones de Cabecera -->
       <div class="flex items-center gap-2">
         <button id="btn-load-demo" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-3 py-1.5 rounded border border-neutral-700 transition flex items-center gap-1.5">
           <i class="fa-solid fa-box-open text-red-500"></i> <span class="hidden sm:inline">Cargar 33 Plts</span>
@@ -127,16 +149,18 @@
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- ========================================== -->
-  <!-- VISTA 1: PLANIFICADOR 2D                   -->
-  <!-- ========================================== -->
+  <!-- ======================================================== -->
+  <!-- VISTA 1: PLANIFICADOR 2D (Estiba Interactiva & LDM)      -->
+  <!-- ======================================================== -->
   <main id="view-planner" class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1">
     
     <div class="xl:col-span-3 space-y-4">
       
+      <!-- Parámetros del Tráiler -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -222,7 +246,7 @@
         </form>
       </div>
 
-      <!-- Resumen -->
+      <!-- Resumen de Ocupación -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -257,18 +281,19 @@
           </div>
         </div>
 
-        <button onclick="switchTab('quote')" class="w-full mt-3 bg-black hover:bg-neutral-800 text-white font-bold py-2 rounded text-xs transition flex items-center justify-center gap-2">
-          <span>Ir a Cotización & Hoja de Ruta</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        <button onclick="switchTab('route')" class="w-full mt-3 bg-black hover:bg-neutral-800 text-white font-bold py-2 rounded text-xs transition flex items-center justify-center gap-2">
+          <span>Ir a Ruta & Mapa</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </button>
       </div>
 
+      <!-- Partidas Registradas -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Partidas Introducidas</h2>
         <div id="pallet-group-list" class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1"></div>
       </div>
     </div>
 
-    <!-- Columna Principal Tráiler -->
+    <!-- Columna Principal Tráiler Panorámico -->
     <div class="xl:col-span-9 space-y-4">
       
       <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -278,7 +303,7 @@
           </span>
           <span class="text-neutral-300">|</span>
           <span class="flex items-center gap-1.5 font-medium">
-            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Ajuste a ras</strong>
+            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Ajuste magnético a ras</strong>
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -295,71 +320,122 @@
     </div>
   </main>
 
-  <!-- ========================================== -->
-  <!-- VISTA 2: COTIZADOR & GENERADOR DE PDF      -->
-  <!-- ========================================== -->
+  <!-- ======================================================== -->
+  <!-- VISTA 2: RUTA & MAPA INTERACTIVO EUROPEO                 -->
+  <!-- ======================================================== -->
+  <main id="view-route" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      
+      <!-- Columna Izquierda: Paradas por CP y Parámetros de Ruta (5 cols) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm space-y-3">
+          
+          <div class="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div>
+              <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-route text-red-600"></i> Paradas de la Ruta (Europa)
+              </h2>
+              <p class="text-[10px] text-neutral-400">Introduce Código Postal y País</p>
+            </div>
+            <button id="btn-calc-route" onclick="fetchRouteDistance()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-2 shadow">
+              <i class="fa-solid fa-arrows-rotate text-xs" id="refresh-icon"></i> 
+              <span id="refresh-text">Calcular Ruta en Mapa</span>
+            </button>
+          </div>
+
+          <!-- Puntos de Carga -->
+          <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> Puntos de Carga (Verde)
+              </span>
+              <button type="button" onclick="addPickupStop()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded transition shadow-sm">
+                <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
+              </button>
+            </div>
+            <div id="pickup-stops-container" class="space-y-1.5"></div>
+          </div>
+
+          <!-- Puntos de Descarga -->
+          <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-red-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Puntos de Descarga (Rojo)
+              </span>
+              <button type="button" onclick="addDropoffStop()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-0.5 rounded transition shadow-sm">
+                <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
+              </button>
+            </div>
+            <div id="dropoff-stops-container" class="space-y-1.5"></div>
+          </div>
+
+          <!-- Resumen de Métricas de Ruta -->
+          <div class="grid grid-cols-3 gap-2 text-center pt-1 font-mono">
+            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
+              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Distancia Total</span>
+              <span id="route-stat-km" class="text-sm font-extrabold text-black">0 km</span>
+            </div>
+            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
+              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Tiempo Estimado</span>
+              <span id="route-stat-time" class="text-sm font-extrabold text-neutral-700">0 h 00 m</span>
+            </div>
+            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
+              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Paradas Extra</span>
+              <span id="route-stat-stops" class="text-sm font-extrabold text-red-600">0 (+0 €)</span>
+            </div>
+          </div>
+
+          <button onclick="switchTab('quote')" class="w-full bg-black hover:bg-neutral-800 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-2">
+            <span>Ver Cotización & Generar PDF</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Columna Derecha: Mapa Interactivo Leaflet (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col">
+        <div class="bg-white p-3 rounded-xl border border-neutral-300 shadow-sm flex-1 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-200 text-xs">
+            <div class="flex items-center gap-2 font-bold text-neutral-800">
+              <i class="fa-solid fa-map text-red-600"></i>
+              <span>Trazado de Ruta por Carretera</span>
+            </div>
+            <span class="text-[10px] text-neutral-400 font-mono">OpenStreetMap & OSRM Routing</span>
+          </div>
+
+          <div id="map-container" class="w-full flex-1 border border-neutral-200"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- VISTA 3: COTIZADOR & GENERADOR DE PDF (Hoja de Carga)     -->
+  <!-- ======================================================== -->
   <main id="view-quote" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Panel de Control Interno -->
+      <!-- Panel de Control Interno (No se imprime) -->
       <div class="lg:col-span-5 space-y-4 no-print">
         
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
-            <div>
-              <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-route text-red-600"></i> Paradas por Código Postal
-              </h2>
-              <p class="text-[10px] text-neutral-400">Rutas en toda Europa por CP</p>
-            </div>
-            <button id="btn-calc-route" onclick="fetchRouteDistance()" class="bg-neutral-900 hover:bg-red-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1.5 shadow-sm">
-              <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i> 
-              <span id="refresh-text">Refrescar & Calcular Ruta</span>
-            </button>
-          </div>
-
-          <div class="space-y-3 text-xs">
-            <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
-                  <i class="fa-solid fa-arrow-up-from-bracket"></i> Puntos de Carga
-                </span>
-                <button type="button" onclick="addPickupStop()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded transition">
-                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
-                </button>
-              </div>
-              <div id="pickup-stops-container" class="space-y-2"></div>
-            </div>
-
-            <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-red-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
-                  <i class="fa-solid fa-arrow-right-to-bracket"></i> Puntos de Descarga
-                </span>
-                <button type="button" onclick="addDropoffStop()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-0.5 rounded transition">
-                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
-                </button>
-              </div>
-              <div id="dropoff-stops-container" class="space-y-2"></div>
-            </div>
-
-            <div>
-              <label class="block text-neutral-600 font-semibold mb-1">Referencia / Expedición:</label>
-              <input type="text" id="route-reference" value="" placeholder="Ej. EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" />
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
-          <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-lock text-red-600"></i> Tarifas & Redondeo (Uso Interno)
+              <i class="fa-solid fa-lock text-red-600"></i> Parámetros Financieros (Uso Agencia)
             </h2>
             <div class="flex bg-neutral-100 p-0.5 rounded border border-neutral-200 text-xs">
-              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]">FTL</button>
-              <button id="btn-mode-ltl" onclick="setFreightMode('ltl')" class="px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]">Grupaje</button>
+              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]">FTL (Completo)</button>
+              <button id="btn-mode-ltl" onclick="setFreightMode('ltl')" class="px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]">Grupaje (LTL)</button>
             </div>
+          </div>
+
+          <div>
+            <label class="block text-neutral-600 font-semibold mb-1 text-xs">Referencia / Expedición:</label>
+            <input type="text" id="route-reference" value="" placeholder="Ej. EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-medium text-xs focus:border-red-600 focus:outline-none mb-3" />
           </div>
 
           <div id="form-ftl-params" class="space-y-3 text-xs">
@@ -461,7 +537,7 @@
             </div>
             <div class="text-right">
               <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">LOADFLOW PRO</div>
-              <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 03/11/2026</div>
+              <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 04/11/2026</div>
             </div>
           </div>
 
@@ -549,7 +625,9 @@
     </div>
   </main>
 
-  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO -->
+  <!-- ======================================================== -->
+  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO                  -->
+  <!-- ======================================================== -->
   <script>
     const SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
     const SUPABASE_ANON_KEY = "TU_ANON_KEY_DE_SUPABASE";
@@ -613,12 +691,20 @@
     window.addEventListener('DOMContentLoaded', checkUserAccess);
   </script>
 
-  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS INTERNACIONALES -->
+  <!-- ======================================================== -->
+  <!-- MOTOR PRINCIPAL (Estiba, Leaflet Map & Cotización)       -->
+  <!-- ======================================================== -->
   <script>
     let palletGroups = [];
     let items = [];
     let freightMode = 'ftl';
 
+    // Instancia de Mapa Leaflet
+    let mapInstance = null;
+    let mapRouteLayer = null;
+    let mapMarkersLayer = null;
+
+    // Países Europeos Soportados
     const EUROPEAN_COUNTRIES = [
       { code: 'ES', name: 'España' },
       { code: 'NL', name: 'Países Bajos' },
@@ -640,12 +726,8 @@
     ];
 
     // Arranca vacío
-    let pickupStops = [
-      { cp: '', city: '', country: 'ES' }
-    ];
-    let dropoffStops = [
-      { cp: '', city: '', country: 'ES' }
-    ];
+    let pickupStops = [{ cp: '', city: '', country: 'ES' }];
+    let dropoffStops = [{ cp: '', city: '', country: 'ES' }];
 
     function parseNum(val, defaultVal = 0) {
       if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
@@ -663,6 +745,81 @@
       setTimeout(() => {
         toast.classList.add('opacity-0', 'pointer-events-none');
       }, 2500);
+    }
+
+    // Inicializar Mapa Leaflet
+    function initMap() {
+      if (mapInstance) return;
+
+      // Centro por defecto: Centro de Europa
+      mapInstance = L.map('map-container').setView([48.5, 4.0], 5);
+
+      // Capa de teselas OpenStreetMap gratuita
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(mapInstance);
+
+      mapRouteLayer = L.layerGroup().addTo(mapInstance);
+      mapMarkersLayer = L.layerGroup().addTo(mapInstance);
+    }
+
+    // Navegación entre las 3 pestañas
+    function switchTab(tab) {
+      const viewPlanner = document.getElementById('view-planner');
+      const viewRoute = document.getElementById('view-route');
+      const viewQuote = document.getElementById('view-quote');
+
+      const btnPlanner = document.getElementById('tab-btn-planner');
+      const btnRoute = document.getElementById('tab-btn-route');
+      const btnQuote = document.getElementById('tab-btn-quote');
+
+      // Clases activas / inactivas
+      const activeClass = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow";
+      const inactiveClass = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
+
+      [viewPlanner, viewRoute, viewQuote].forEach(v => v.classList.add('hidden'));
+      btnPlanner.className = inactiveClass;
+      btnRoute.className = inactiveClass;
+      btnQuote.className = inactiveClass;
+
+      if (tab === 'planner') {
+        viewPlanner.classList.remove('hidden');
+        btnPlanner.className = activeClass;
+        render();
+      } else if (tab === 'route') {
+        viewRoute.classList.remove('hidden');
+        btnRoute.className = activeClass;
+        setTimeout(() => {
+          initMap();
+          if (mapInstance) mapInstance.invalidateSize();
+        }, 100);
+      } else if (tab === 'quote') {
+        viewQuote.classList.remove('hidden');
+        btnQuote.className = activeClass;
+        updateQuotation();
+      }
+    }
+
+    function setFreightMode(mode) {
+      freightMode = mode;
+      const btnFtl = document.getElementById('btn-mode-ftl');
+      const btnLtl = document.getElementById('btn-mode-ltl');
+      const formFtl = document.getElementById('form-ftl-params');
+      const formLtl = document.getElementById('form-ltl-params');
+
+      if (mode === 'ftl') {
+        btnFtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
+        btnLtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
+        formFtl.classList.remove('hidden');
+        formLtl.classList.add('hidden');
+      } else {
+        btnLtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
+        btnFtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
+        formLtl.classList.remove('hidden');
+        formLtl.classList.add('hidden');
+      }
+      updateQuotation();
     }
 
     function getCountryOptions(selectedCode) {
@@ -764,55 +921,13 @@
       if (color) document.getElementById('p-color').value = color;
     }
 
-    function switchTab(tab) {
-      const viewPlanner = document.getElementById('view-planner');
-      const viewQuote = document.getElementById('view-quote');
-      const btnPlanner = document.getElementById('tab-btn-planner');
-      const btnQuote = document.getElementById('tab-btn-quote');
-
-      if (tab === 'planner') {
-        viewPlanner.classList.remove('hidden');
-        viewQuote.classList.add('hidden');
-        btnPlanner.className = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow";
-        btnQuote.className = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
-        render();
-      } else {
-        viewPlanner.classList.add('hidden');
-        viewQuote.classList.remove('hidden');
-        btnQuote.className = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow";
-        btnPlanner.className = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
-        updateQuotation();
-      }
-    }
-
-    function setFreightMode(mode) {
-      freightMode = mode;
-      const btnFtl = document.getElementById('btn-mode-ftl');
-      const btnLtl = document.getElementById('btn-mode-ltl');
-      const formFtl = document.getElementById('form-ftl-params');
-      const formLtl = document.getElementById('form-ltl-params');
-
-      if (mode === 'ftl') {
-        btnFtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
-        btnLtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
-        formFtl.classList.remove('hidden');
-        formLtl.classList.add('hidden');
-      } else {
-        btnLtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
-        btnFtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
-        formLtl.classList.remove('hidden');
-        formFtl.classList.add('hidden');
-      }
-      updateQuotation();
-    }
-
+    // Arranque de la App
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
       document.getElementById('print-date').innerText = `Fecha: ${today.toLocaleDateString('es-ES')}`;
       renderStopsInputs();
       render();
 
-      // Listener robusto para el formulario de bultos
       const palletForm = document.getElementById('pallet-form');
       palletForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -835,7 +950,6 @@
         showToast(`${qty} ${name} añadido(s) al camión.`);
       });
 
-      // Inputs del tráiler
       ['truck-length', 'truck-width', 'truck-max-weight', 'ratio-ldm'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => { render(); updateQuotation(); });
@@ -858,6 +972,11 @@
       dropoffStops = [{ cp: '', city: '', country: 'ES' }];
       document.getElementById('ftl-km').value = 0;
       document.getElementById('route-reference').value = '';
+      if (mapRouteLayer) mapRouteLayer.clearLayers();
+      if (mapMarkersLayer) mapMarkersLayer.clearLayers();
+      document.getElementById('route-stat-km').innerText = '0 km';
+      document.getElementById('route-stat-time').innerText = '0 h 00 m';
+      document.getElementById('route-stat-stops').innerText = '0 (+0 €)';
       renderStopsInputs();
       render();
       updateQuotation();
@@ -1332,6 +1451,9 @@
       });
     }
 
+    // ============================================================
+    // BÚSQUEDA Y TRAZADO DE RUTA EN MAPA LEAFLET
+    // ============================================================
     async function geocodeStop(stop) {
       const country = (stop.country || 'ES').toLowerCase();
       let cp = (stop.cp || '').trim();
@@ -1365,7 +1487,7 @@
       }
 
       if (data && data.length > 0) {
-        return { lon: data[0].lon, lat: data[0].lat };
+        return { lon: parseFloat(data[0].lon), lat: parseFloat(data[0].lat), display: data[0].display_name };
       }
       return null;
     }
@@ -1384,28 +1506,96 @@
       }
 
       icon.classList.add('fa-spin');
-      text.innerText = 'Calculando ruta...';
+      text.innerText = 'Calculando...';
 
       const fullStops = [...validPickups, ...validDropoffs];
 
       try {
         const coords = [];
+        const stopPoints = [];
+
         for (let i = 0; i < fullStops.length; i++) {
           const point = await geocodeStop(fullStops[i]);
           if (!point) {
             throw new Error(`No se encontró el CP "${fullStops[i].cp || fullStops[i].city}" en ${fullStops[i].country}`);
           }
           coords.push(`${point.lon},${point.lat}`);
+          stopPoints.push({
+            ...fullStops[i],
+            lat: point.lat,
+            lon: point.lon,
+            isPickup: i < validPickups.length
+          });
         }
 
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords.join(';')}?overview=false`;
+        // Llamada OSRM con polilínea completa (geometries=geojson)
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords.join(';')}?overview=full&geometries=geojson`;
         const resRoute = await fetch(osrmUrl);
         const dataRoute = await resRoute.json();
 
         if (dataRoute.routes && dataRoute.routes.length > 0) {
-          const meters = dataRoute.routes[0].distance;
+          const route = dataRoute.routes[0];
+          const meters = route.distance;
+          const seconds = route.duration;
           const calculatedKm = Math.max(1, Math.round(meters / 1000));
+          
           document.getElementById('ftl-km').value = calculatedKm;
+
+          // Métricas de ruta en pantalla
+          const hours = Math.floor(seconds / 3600);
+          const minutes = Math.round((seconds % 3600) / 60);
+          document.getElementById('route-stat-km').innerText = `${calculatedKm.toLocaleString('es-ES')} km`;
+          document.getElementById('route-stat-time').innerText = `${hours} h ${minutes} m`;
+
+          const extraPickups = Math.max(0, validPickups.length - 1);
+          const extraDropoffs = Math.max(0, validDropoffs.length - 1);
+          const extraStopsCount = extraPickups + extraDropoffs;
+          const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
+          document.getElementById('route-stat-stops').innerText = `${extraStopsCount} (+${extraStopsCount * stopRate} €)`;
+
+          // DIBUJAR EN EL MAPA LEAFLET
+          initMap();
+          if (mapInstance && mapRouteLayer && mapMarkersLayer) {
+            mapRouteLayer.clearLayers();
+            mapMarkersLayer.clearLayers();
+
+            // 1. Trazado de carretera
+            const geojsonLayer = L.geoJSON(route.geometry, {
+              style: {
+                color: '#dc2626', // Rojo LoadFlow
+                weight: 5,
+                opacity: 0.85
+              }
+            }).addTo(mapRouteLayer);
+
+            // 2. Marcadores personalizados de Paradas (Verde = Carga, Rojo = Descarga)
+            const bounds = L.latLngBounds();
+
+            stopPoints.forEach((p, idx) => {
+              bounds.extend([p.lat, p.lon]);
+
+              const markerColor = p.isPickup ? '#059669' : '#dc2626';
+              const markerIcon = L.divIcon({
+                className: 'custom-map-pin',
+                html: `
+                  <div style="background-color: ${markerColor}; color: white; width: 26px; height: 26px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: monospace; font-size: 11px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.35);">
+                    ${idx + 1}
+                  </div>
+                `,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+              });
+
+              const label = `${p.isPickup ? 'Carga' : 'Descarga'} #${idx + 1}: ${p.country}-${p.cp} ${p.city ? `(${p.city})` : ''}`;
+              L.marker([p.lat, p.lon], { icon: markerIcon })
+                .bindPopup(`<strong style="font-size:12px; font-family:sans-serif;">${label}</strong>`)
+                .addTo(mapMarkersLayer);
+            });
+
+            // Ajustar zoom automático para que quepa todo el trayecto
+            mapInstance.fitBounds(geojsonLayer.getBounds(), { padding: [40, 40] });
+          }
+
           showToast(`Ruta calculada: ${calculatedKm.toLocaleString('es-ES')} km (${fullStops.length} paradas).`);
         } else {
           throw new Error('No se pudo trazar la ruta por carretera.');
@@ -1415,7 +1605,7 @@
         showToast(err.message || 'Error en la búsqueda. Puedes introducir los km manualmente.');
       } finally {
         icon.classList.remove('fa-spin');
-        text.innerText = 'Refrescar & Calcular Ruta';
+        text.innerText = 'Calcular Ruta en Mapa';
         updateQuotation();
       }
     }
