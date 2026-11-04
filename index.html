@@ -103,7 +103,7 @@
         </div>
         <div>
           <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">LoadFlow Pro</h1>
-          <p class="text-[11px] text-neutral-400 font-mono">Rutas por Código Postal & País (Europa) | 1 LDM = 1.750 kg</p>
+          <p class="text-[11px] text-neutral-400 font-mono">Planificador de Estiba & Rutas Internacionales (Europa)</p>
         </div>
       </div>
 
@@ -350,7 +350,7 @@
 
             <div>
               <label class="block text-neutral-600 font-semibold mb-1">Referencia / Expedición:</label>
-              <input type="text" id="route-reference" value="EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" />
+              <input type="text" id="route-reference" value="" placeholder="Ej. EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" />
             </div>
           </div>
         </div>
@@ -371,7 +371,7 @@
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-neutral-500 font-medium mb-1">Distancia Ruta (km)</label>
-                <input type="number" id="ftl-km" value="28" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" />
+                <input type="number" id="ftl-km" value="0" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
                 <label class="block text-neutral-500 font-medium mb-1">Coste Chófer (€/km)</label>
@@ -462,7 +462,7 @@
                 <span class="bg-black text-white font-extrabold text-sm px-2 py-0.5 rounded font-mono">ORDEN DE TRANSPORTE</span>
                 <span class="font-extrabold text-sm tracking-tight uppercase">HOJA DE EXPEDICIÓN</span>
               </div>
-              <div class="text-[11px] text-neutral-500 font-mono mt-1">Referencia: <span id="preview-ref" class="font-bold text-black">EXPEDICIÓN R-2026-0048</span></div>
+              <div class="text-[11px] text-neutral-500 font-mono mt-1">Referencia: <span id="preview-ref" class="font-bold text-black">-</span></div>
             </div>
             <div class="text-right">
               <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">LOADFLOW PRO</div>
@@ -618,20 +618,19 @@
     window.addEventListener('DOMContentLoaded', checkUserAccess);
   </script>
 
-  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS -->
+  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS INTERNACIONALES -->
   <script>
     let palletGroups = [];
     let items = [];
     let freightMode = 'ftl';
 
-    // Lista de países más habituales en Europa
     const EUROPEAN_COUNTRIES = [
       { code: 'ES', name: 'España' },
+      { code: 'NL', name: 'Países Bajos' },
       { code: 'FR', name: 'Francia' },
       { code: 'DE', name: 'Alemania' },
       { code: 'IT', name: 'Italia' },
       { code: 'PT', name: 'Portugal' },
-      { code: 'NL', name: 'Países Bajos' },
       { code: 'BE', name: 'Bélgica' },
       { code: 'PL', name: 'Polonia' },
       { code: 'AT', name: 'Austria' },
@@ -645,12 +644,12 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    // Estructura de paradas con código postal, población y país
+    // INICIA COMPLETAMENTE VACÍO
     let pickupStops = [
-      { cp: '08780', city: 'Pallejà', country: 'ES' }
+      { cp: '', city: '', country: 'ES' }
     ];
     let dropoffStops = [
-      { cp: '08040', city: 'Barcelona (Zona Franca)', country: 'ES' }
+      { cp: '', city: '', country: 'ES' }
     ];
 
     const form = document.getElementById('pallet-form');
@@ -677,7 +676,6 @@
       }, 2500);
     }
 
-    // RENDERIZADO DE PARADAS CON CÓDIGO POSTAL Y SELECTOR DE PAÍS
     function getCountryOptions(selectedCode) {
       return EUROPEAN_COUNTRIES.map(c => `
         <option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''}>${c.code} - ${c.name}</option>
@@ -696,9 +694,9 @@
             ${getCountryOptions(stop.country)}
           </select>
 
-          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 08780)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 9665)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           
-          <input type="text" value="${stop.city}" oninput="updatePickupField(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updatePickupField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
 
           ${idx > 0 ? `
             <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
@@ -718,7 +716,7 @@
 
           <input type="text" value="${stop.cp}" oninput="updateDropoffField(${idx}, 'cp', this.value)" placeholder="CP (ej. 08040)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           
-          <input type="text" value="${stop.city}" oninput="updateDropoffField(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updateDropoffField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
 
           ${idx > 0 ? `
             <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
@@ -731,7 +729,6 @@
       updateQuotation();
     }
 
-    // Al añadir parada, hereda automáticamente el país de la anterior
     function addPickupStop() {
       const lastCountry = pickupStops.length > 0 ? pickupStops[pickupStops.length - 1].country : 'ES';
       pickupStops.push({ cp: '', city: '', country: lastCountry });
@@ -856,6 +853,11 @@
     document.getElementById('btn-reset').addEventListener('click', () => {
       palletGroups = [];
       items = [];
+      pickupStops = [{ cp: '', city: '', country: 'ES' }];
+      dropoffStops = [{ cp: '', city: '', country: 'ES' }];
+      document.getElementById('ftl-km').value = 0;
+      document.getElementById('route-reference').value = '';
+      renderStopsInputs();
       render();
     });
 
@@ -1324,28 +1326,41 @@
     }
 
     // ============================================================
-    // BÚSQUEDA PRECISA POR CÓDIGO POSTAL Y PAÍS (EUROPA)
+    // MOTOR DE BÚSQUEDA MULTIFORMATO PARA EUROPA (NL, ES, FR, DE, etc.)
     // ============================================================
     async function geocodeStop(stop) {
       const country = (stop.country || 'ES').toLowerCase();
-      const cp = (stop.cp || '').trim();
+      let cp = (stop.cp || '').trim();
       const city = (stop.city || '').trim();
 
       if (!cp && !city) return null;
 
-      // Estrategia 1: Búsqueda estructurada por postalcode y countrycodes
-      let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
-      if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
+      // Limpiar prefijo de país si el usuario ya lo escribió (ej: "NL-9665" -> "9665")
+      cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '');
+
+      // Estrategia 1: Consulta estructurada por postalcode
+      let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}&postalcode=${encodeURIComponent(cp)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
 
       let res = await fetch(url);
       let data = await res.json();
 
-      // Estrategia 2 (Fallback): Búsqueda de texto libre combinada con el país
+      // Estrategia 2: Países Bajos (NL) o Reino Unido suelen requerir consulta libre si no llevan letras
       if (!data || data.length === 0) {
-        const query = `${cp} ${city}, ${country}`.trim();
-        const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=${encodeURIComponent(country)}`;
+        let queryParts = [];
+        if (cp) queryParts.push(cp);
+        if (city) queryParts.push(city);
+        queryParts.push(stop.country);
+
+        const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryParts.join(', '))}&countrycodes=${encodeURIComponent(country)}`;
         res = await fetch(fallbackUrl);
+        data = await res.json();
+      }
+
+      // Estrategia 3: Si es NL y son 4 dígitos, buscar prefijo postal
+      if ((!data || data.length === 0) && country === 'nl' && /^\d{4}$/.test(cp)) {
+        const nlUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cp + ', Netherlands')}&countrycodes=nl`;
+        res = await fetch(nlUrl);
         data = await res.json();
       }
 
@@ -1369,7 +1384,7 @@
       }
 
       icon.classList.add('fa-spin');
-      text.innerText = 'Buscando CP...';
+      text.innerText = 'Calculando ruta...';
 
       const fullStops = [...validPickups, ...validDropoffs];
 
@@ -1383,7 +1398,6 @@
           coords.push(`${point.lon},${point.lat}`);
         }
 
-        // Consulta de ruta OSRM con coordenadas exactas
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords.join(';')}?overview=false`;
         const resRoute = await fetch(osrmUrl);
         const dataRoute = await resRoute.json();
@@ -1392,13 +1406,13 @@
           const meters = dataRoute.routes[0].distance;
           const calculatedKm = Math.max(1, Math.round(meters / 1000));
           document.getElementById('ftl-km').value = calculatedKm;
-          showToast(`Ruta calculada: ${calculatedKm} km (${fullStops.length} paradas).`);
+          showToast(`Ruta calculada: ${calculatedKm.toLocaleString('es-ES')} km (${fullStops.length} paradas).`);
         } else {
           throw new Error('No se pudo trazar la ruta por carretera.');
         }
 
       } catch (err) {
-        showToast(err.message || 'Error en la búsqueda por CP. Puedes ajustar los km manualmente.');
+        showToast(err.message || 'Error en la búsqueda. Puedes introducir los km manualmente.');
       } finally {
         icon.classList.remove('fa-spin');
         text.innerText = 'Refrescar & Calcular Ruta';
@@ -1464,7 +1478,7 @@
       let finalPrice = 0;
 
       if (freightMode === 'ftl') {
-        const km = parseNum(document.getElementById('ftl-km').value, 28);
+        const km = parseNum(document.getElementById('ftl-km').value, 0);
         const driverRate = parseNum(document.getElementById('ftl-driver-rate').value, 1.25);
         const markupPct = parseNum(document.getElementById('ftl-markup-pct').value, 15.0);
         const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
@@ -1478,7 +1492,7 @@
         finalPrice = applyRoundUp(rawFinalPrice, roundStep);
 
         const stopsLabel = totalExtraStops > 0 ? ` (${totalExtraStops} paradas extra @ ${stopRate}€)` : '';
-        document.getElementById('preview-mode-desc').innerText = `Camión Completo (FTL) - ${km} km${stopsLabel}`;
+        document.getElementById('preview-mode-desc').innerText = `Camión Completo (FTL) - ${km.toLocaleString('es-ES')} km${stopsLabel}`;
 
       } else {
         const basePerLdm = parseNum(document.getElementById('ltl-base-per-ldm').value, 100);
