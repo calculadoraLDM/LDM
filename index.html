@@ -3,22 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoadFlow Pro | Estiba, Mapa de Ruta & Cotizador LDM</title>
-  
-  <!-- Tailwind CSS & Iconos -->
+  <title>LoadFlow | Planificador LDM & Cotizador</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
-  <!-- Leaflet Maps CSS & JS (100% libre, sin clave de API de Google) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <!-- Tipografías -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
+  <!-- Leaflet para el Mapa Interactivo -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     body { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -35,17 +31,10 @@
       touch-action: none;
     }
     .pallet-card:hover {
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.45);
       z-index: 30 !important;
     }
-    #map-container {
-      min-height: 480px;
-      height: 100%;
-      border-radius: 0.75rem;
-      z-index: 10;
-    }
 
-    /* Estilos de Impresión Limpia (PDF) */
     @media print {
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
@@ -59,18 +48,18 @@
 </head>
 <body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col relative">
 
-  <!-- MODAL DE PAGO / PAYWALL (Opcional con Supabase) -->
-  <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <!-- MODAL DE PAGO / PAYWALL (Bloqueo si no ha pagado 20 €) -->
+  <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-2xl p-6 sm:p-8 shadow-2xl border border-neutral-200 text-center relative overflow-hidden">
       <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
         <i class="fa-solid fa-truck-fast"></i>
       </div>
 
       <h2 class="text-xl font-extrabold text-neutral-900 uppercase tracking-tight">Acceso a LoadFlow Pro</h2>
-      <p class="text-xs text-neutral-500 mt-1 mb-6">Planificador de estiba 2D, cálculo de LDM, mapa europeo de rutas y cotizador</p>
+      <p class="text-xs text-neutral-500 mt-1 mb-6">Planificador de estiba 2D, cálculo de LDM y generador de cotizaciones en PDF</p>
 
       <div id="auth-step-login" class="space-y-4">
-        <p class="text-xs text-neutral-600 leading-relaxed">Inicia sesión con Google para validar tu licencia permanente.</p>
+        <p class="text-xs text-neutral-600 leading-relaxed">Inicia sesión con tu cuenta de Google para acceder o validar tu licencia de acceso de por vida.</p>
         <button onclick="loginWithGoogle()" class="w-full bg-neutral-900 hover:bg-black text-white font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-3 shadow-md border border-neutral-800">
           <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           <span>Continuar con Google</span>
@@ -79,13 +68,13 @@
 
       <div id="auth-step-pay" class="hidden space-y-4">
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-left text-xs">
-          <div class="text-neutral-500 text-[11px]">Cuenta activa:</div>
+          <div class="text-neutral-500 text-[11px]">Sesión activa:</div>
           <div id="user-display-email" class="font-bold text-neutral-900 truncate">usuario@gmail.com</div>
         </div>
 
         <div class="py-2">
           <div class="text-3xl font-extrabold text-neutral-900 font-mono">20 €</div>
-          <div class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Pago único • Acceso ilimitado</div>
+          <div class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Pago único • Acceso ilimitado de por vida</div>
         </div>
 
         <a id="btn-pay-stripe" href="#" target="_blank" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
@@ -95,7 +84,7 @@
 
         <div class="pt-2 flex justify-between items-center text-[11px]">
           <button onclick="checkUserAccess()" class="text-neutral-600 hover:text-black font-semibold underline">
-            <i class="fa-solid fa-rotate-right mr-1"></i> Verificar pago
+            <i class="fa-solid fa-rotate-right mr-1"></i> Ya he pagado, verificar
           </button>
           <button onclick="logout()" class="text-neutral-400 hover:text-red-600">Cerrar sesión</button>
         </div>
@@ -103,41 +92,37 @@
     </div>
   </div>
 
-  <!-- Toast de Alerta Flotante -->
+  <!-- Toast flotante -->
   <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
     <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
     <span id="toast-msg">Mensaje</span>
   </div>
 
-  <!-- Cabecera y Barra de Pestañas -->
+  <!-- Cabecera -->
   <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-40 px-4 py-2.5 shadow-md no-print">
     <div class="w-full flex flex-wrap items-center justify-between gap-3">
-      
-      <!-- Marca -->
       <div class="flex items-center gap-3">
         <div class="bg-red-600 text-white font-extrabold text-lg px-2.5 py-1 rounded tracking-tighter flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-truck-ramp-box"></i>
         </div>
         <div>
           <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">LoadFlow Pro</h1>
-          <p class="text-[11px] text-neutral-400 font-mono">Planificador de Estiba, Rutas Europeas por CP & Cotización</p>
+          <p class="text-[11px] text-neutral-400 font-mono">Planificador de Estiba & Rutas Internacionales (Europa)</p>
         </div>
       </div>
 
-      <!-- Selector de 3 Pestañas -->
       <nav class="flex items-center bg-neutral-900 p-1 rounded-lg border border-neutral-800">
         <button id="tab-btn-planner" onclick="switchTab('planner')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow">
-          <i class="fa-solid fa-layer-group text-[11px]"></i> <span>Planificador 2D</span>
+          <i class="fa-solid fa-layer-group text-[11px]"></i> Planificador 2D
         </button>
-        <button id="tab-btn-route" onclick="switchTab('route')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
-          <i class="fa-solid fa-map-location-dot text-[11px]"></i> <span>Ruta & Mapa</span>
+        <button id="tab-btn-map" onclick="switchTab('map')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
+          <i class="fa-solid fa-map-location-dot text-[11px]"></i> Ruta & Mapa
         </button>
         <button id="tab-btn-quote" onclick="switchTab('quote')" class="px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white">
-          <i class="fa-solid fa-file-invoice-dollar text-[11px]"></i> <span>Cotización & PDF</span>
+          <i class="fa-solid fa-file-invoice-dollar text-[11px]"></i> Cotización & PDF
         </button>
       </nav>
       
-      <!-- Acciones de Cabecera -->
       <div class="flex items-center gap-2">
         <button id="btn-load-demo" class="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-3 py-1.5 rounded border border-neutral-700 transition flex items-center gap-1.5">
           <i class="fa-solid fa-box-open text-red-500"></i> <span class="hidden sm:inline">Cargar 33 Plts</span>
@@ -149,18 +134,16 @@
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
       </div>
-
     </div>
   </header>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 1: PLANIFICADOR 2D (Estiba Interactiva & LDM)      -->
-  <!-- ======================================================== -->
+  <!-- ========================================== -->
+  <!-- VISTA 1: PLANIFICADOR 2D                   -->
+  <!-- ========================================== -->
   <main id="view-planner" class="w-full px-3 py-4 grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1">
     
     <div class="xl:col-span-3 space-y-4">
       
-      <!-- Parámetros del Tráiler -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -246,7 +229,7 @@
         </form>
       </div>
 
-      <!-- Resumen de Ocupación -->
+      <!-- Resumen -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <div class="flex items-center justify-between pb-2 border-b border-neutral-200 mb-2.5">
           <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-1.5">
@@ -281,19 +264,18 @@
           </div>
         </div>
 
-        <button onclick="switchTab('route')" class="w-full mt-3 bg-black hover:bg-neutral-800 text-white font-bold py-2 rounded text-xs transition flex items-center justify-center gap-2">
-          <span>Ir a Ruta & Mapa</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        <button onclick="switchTab('quote')" class="w-full mt-3 bg-black hover:bg-neutral-800 text-white font-bold py-2 rounded text-xs transition flex items-center justify-center gap-2">
+          <span>Ir a Cotización & Hoja de Ruta</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
         </button>
       </div>
 
-      <!-- Partidas Registradas -->
       <div class="bg-white p-3.5 rounded-xl border border-neutral-300 shadow-sm">
         <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Partidas Introducidas</h2>
         <div id="pallet-group-list" class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1"></div>
       </div>
     </div>
 
-    <!-- Columna Principal Tráiler Panorámico -->
+    <!-- Columna Principal Tráiler -->
     <div class="xl:col-span-9 space-y-4">
       
       <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -303,7 +285,7 @@
           </span>
           <span class="text-neutral-300">|</span>
           <span class="flex items-center gap-1.5 font-medium">
-            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Ajuste magnético a ras</strong>
+            <i class="fa-solid fa-magnet text-black"></i> Arrastrar: <strong>Ajuste a ras</strong>
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -320,122 +302,142 @@
     </div>
   </main>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 2: RUTA & MAPA INTERACTIVO EUROPEO                 -->
-  <!-- ======================================================== -->
-  <main id="view-route" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+  <!-- ========================================== -->
+  <!-- VISTA 2: RUTA & MAPA INTERACTIVO           -->
+  <!-- ========================================== -->
+  <main id="view-map" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Columna Izquierda: Paradas por CP y Parámetros de Ruta (5 cols) -->
+      <!-- Panel de paradas -->
       <div class="lg:col-span-5 space-y-4">
-        
-        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm space-y-3">
-          
-          <div class="flex items-center justify-between border-b border-neutral-200 pb-2">
+        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
+          <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <div>
               <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-route text-red-600"></i> Paradas de la Ruta (Europa)
+                <i class="fa-solid fa-route text-red-600"></i> Trazado de Ruta Europeo
               </h2>
-              <p class="text-[10px] text-neutral-400">Introduce Código Postal y País</p>
+              <p class="text-[10px] text-neutral-400">Introduce Códigos Postales por país</p>
             </div>
-            <button id="btn-calc-route" onclick="fetchRouteDistance()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-2 shadow">
-              <i class="fa-solid fa-arrows-rotate text-xs" id="refresh-icon"></i> 
-              <span id="refresh-text">Calcular Ruta en Mapa</span>
+            <button onclick="fetchRouteDistance()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-arrows-rotate text-[10px]" id="map-refresh-icon"></i>
+              <span>Calcular Ruta en Mapa</span>
             </button>
           </div>
 
-          <!-- Puntos de Carga -->
-          <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up-from-bracket"></i> Puntos de Carga (Verde)
-              </span>
-              <button type="button" onclick="addPickupStop()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded transition shadow-sm">
-                <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
-              </button>
+          <div class="space-y-3 text-xs">
+            <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px]">Puntos de Carga</span>
+                <button type="button" onclick="addPickupStop()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded transition">
+                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
+                </button>
+              </div>
+              <div id="map-pickup-stops-container" class="space-y-2"></div>
             </div>
-            <div id="pickup-stops-container" class="space-y-1.5"></div>
-          </div>
 
-          <!-- Puntos de Descarga -->
-          <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-red-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
-                <i class="fa-solid fa-arrow-right-to-bracket"></i> Puntos de Descarga (Rojo)
-              </span>
-              <button type="button" onclick="addDropoffStop()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-0.5 rounded transition shadow-sm">
-                <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
-              </button>
-            </div>
-            <div id="dropoff-stops-container" class="space-y-1.5"></div>
-          </div>
-
-          <!-- Resumen de Métricas de Ruta -->
-          <div class="grid grid-cols-3 gap-2 text-center pt-1 font-mono">
-            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
-              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Distancia Total</span>
-              <span id="route-stat-km" class="text-sm font-extrabold text-black">0 km</span>
-            </div>
-            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
-              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Tiempo Estimado</span>
-              <span id="route-stat-time" class="text-sm font-extrabold text-neutral-700">0 h 00 m</span>
-            </div>
-            <div class="bg-neutral-50 p-2 rounded-lg border border-neutral-200">
-              <span class="text-[9px] text-neutral-400 uppercase block font-sans font-bold">Paradas Extra</span>
-              <span id="route-stat-stops" class="text-sm font-extrabold text-red-600">0 (+0 €)</span>
+            <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-red-900 font-bold uppercase tracking-wider text-[10px]">Puntos de Descarga</span>
+                <button type="button" onclick="addDropoffStop()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-0.5 rounded transition">
+                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
+                </button>
+              </div>
+              <div id="map-dropoff-stops-container" class="space-y-2"></div>
             </div>
           </div>
-
-          <button onclick="switchTab('quote')" class="w-full bg-black hover:bg-neutral-800 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-2">
-            <span>Ver Cotización & Generar PDF</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-          </button>
         </div>
 
-      </div>
-
-      <!-- Columna Derecha: Mapa Interactivo Leaflet (7 cols) -->
-      <div class="lg:col-span-7 flex flex-col">
-        <div class="bg-white p-3 rounded-xl border border-neutral-300 shadow-sm flex-1 flex flex-col">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-neutral-200 text-xs">
-            <div class="flex items-center gap-2 font-bold text-neutral-800">
-              <i class="fa-solid fa-map text-red-600"></i>
-              <span>Trazado de Ruta por Carretera</span>
-            </div>
-            <span class="text-[10px] text-neutral-400 font-mono">OpenStreetMap & OSRM Routing</span>
+        <!-- Métricas del viaje -->
+        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm grid grid-cols-3 gap-2 text-center font-mono">
+          <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-400 uppercase font-sans block mb-1">Distancia Total</span>
+            <span id="map-stat-km" class="text-base font-extrabold text-black">0 km</span>
           </div>
-
-          <div id="map-container" class="w-full flex-1 border border-neutral-200"></div>
+          <div class="bg-neutral-50 p-2.5 rounded border border-neutral-200">
+            <span class="text-[9px] text-neutral-400 uppercase font-sans block mb-1">Tiempo Estimado</span>
+            <span id="map-stat-time" class="text-base font-extrabold text-neutral-800">--</span>
+          </div>
+          <div class="bg-red-50 p-2.5 rounded border border-red-200">
+            <span class="text-[9px] text-red-600 uppercase font-sans font-bold block mb-1">Paradas Extra</span>
+            <span id="map-stat-stops" class="text-base font-extrabold text-red-600">+0 €</span>
+          </div>
         </div>
       </div>
 
+      <!-- Mapa interactivo -->
+      <div class="lg:col-span-7">
+        <div class="bg-white p-3 rounded-xl border border-neutral-300 shadow-sm h-[580px] flex flex-col">
+          <div id="leaflet-map" class="w-full flex-1 rounded-lg border border-neutral-200"></div>
+          <div class="mt-2 text-[10px] text-neutral-400 flex justify-between items-center px-1 font-mono">
+            <span>OpenStreetMap & OSRM Routing Engine</span>
+            <span>Marcadores: Verde (Carga) • Rojo (Descarga)</span>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 3: COTIZADOR & GENERADOR DE PDF (Hoja de Carga)     -->
-  <!-- ======================================================== -->
+  <!-- ========================================== -->
+  <!-- VISTA 3: COTIZADOR & GENERADOR DE PDF      -->
+  <!-- ========================================== -->
   <main id="view-quote" class="w-full max-w-7xl mx-auto px-4 py-6 hidden flex-1">
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Panel de Control Interno (No se imprime) -->
+      <!-- Panel de Control Interno -->
       <div class="lg:col-span-5 space-y-4 no-print">
         
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
-            <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-lock text-red-600"></i> Parámetros Financieros (Uso Agencia)
-            </h2>
-            <div class="flex bg-neutral-100 p-0.5 rounded border border-neutral-200 text-xs">
-              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]">FTL (Completo)</button>
-              <button id="btn-mode-ltl" onclick="setFreightMode('ltl')" class="px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]">Grupaje (LTL)</button>
+            <div>
+              <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-route text-red-600"></i> Paradas por Código Postal
+              </h2>
+              <p class="text-[10px] text-neutral-400">Rutas en toda Europa por CP</p>
             </div>
+            <button onclick="fetchRouteDistance()" class="bg-neutral-900 hover:bg-red-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-arrows-rotate text-[10px]"></i> 
+              <span>Refrescar & Calcular</span>
+            </button>
           </div>
 
-          <div>
-            <label class="block text-neutral-600 font-semibold mb-1 text-xs">Referencia / Expedición:</label>
-            <input type="text" id="route-reference" value="" placeholder="Ej. EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2.5 py-1.5 font-medium text-xs focus:border-red-600 focus:outline-none mb-3" />
+          <div class="space-y-3 text-xs">
+            <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px]">Puntos de Carga</span>
+                <button type="button" onclick="addPickupStop()" class="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded transition">
+                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
+                </button>
+              </div>
+              <div id="pickup-stops-container" class="space-y-2"></div>
+            </div>
+
+            <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-red-900 font-bold uppercase tracking-wider text-[10px]">Puntos de Descarga</span>
+                <button type="button" onclick="addDropoffStop()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-0.5 rounded transition">
+                  <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
+                </button>
+              </div>
+              <div id="dropoff-stops-container" class="space-y-2"></div>
+            </div>
+
+            <div>
+              <label class="block text-neutral-600 font-semibold mb-1">Referencia / Expedición:</label>
+              <input type="text" id="route-reference" value="" placeholder="Ej. EXPEDICIÓN R-2026-0048" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-medium focus:border-red-600 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
+          <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
+            <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-lock text-red-600"></i> Tarifas & Redondeo (Uso Interno)
+            </h2>
+            <div class="flex bg-neutral-100 p-0.5 rounded border border-neutral-200 text-xs">
+              <button id="btn-mode-ftl" onclick="setFreightMode('ftl')" class="px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]">FTL</button>
+              <button id="btn-mode-ltl" onclick="setFreightMode('ltl')" class="px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]">Grupaje</button>
+            </div>
           </div>
 
           <div id="form-ftl-params" class="space-y-3 text-xs">
@@ -537,7 +539,7 @@
             </div>
             <div class="text-right">
               <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">LOADFLOW PRO</div>
-              <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 04/11/2026</div>
+              <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 03/11/2026</div>
             </div>
           </div>
 
@@ -625,9 +627,7 @@
     </div>
   </main>
 
-  <!-- ======================================================== -->
-  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO                  -->
-  <!-- ======================================================== -->
+  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO -->
   <script>
     const SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
     const SUPABASE_ANON_KEY = "TU_ANON_KEY_DE_SUPABASE";
@@ -691,20 +691,12 @@
     window.addEventListener('DOMContentLoaded', checkUserAccess);
   </script>
 
-  <!-- ======================================================== -->
-  <!-- MOTOR PRINCIPAL (Estiba, Leaflet Map & Cotización)       -->
-  <!-- ======================================================== -->
+  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS INTERNACIONALES -->
   <script>
     let palletGroups = [];
     let items = [];
     let freightMode = 'ftl';
 
-    // Instancia de Mapa Leaflet
-    let mapInstance = null;
-    let mapRouteLayer = null;
-    let mapMarkersLayer = null;
-
-    // Países Europeos Soportados
     const EUROPEAN_COUNTRIES = [
       { code: 'ES', name: 'España' },
       { code: 'NL', name: 'Países Bajos' },
@@ -725,9 +717,13 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    // Arranca vacío
     let pickupStops = [{ cp: '', city: '', country: 'ES' }];
     let dropoffStops = [{ cp: '', city: '', country: 'ES' }];
+
+    // Instancia del mapa Leaflet
+    let leafletMap = null;
+    let mapRouteLayer = null;
+    let mapMarkersLayer = null;
 
     function parseNum(val, defaultVal = 0) {
       if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
@@ -747,81 +743,6 @@
       }, 2500);
     }
 
-    // Inicializar Mapa Leaflet
-    function initMap() {
-      if (mapInstance) return;
-
-      // Centro por defecto: Centro de Europa
-      mapInstance = L.map('map-container').setView([48.5, 4.0], 5);
-
-      // Capa de teselas OpenStreetMap gratuita
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(mapInstance);
-
-      mapRouteLayer = L.layerGroup().addTo(mapInstance);
-      mapMarkersLayer = L.layerGroup().addTo(mapInstance);
-    }
-
-    // Navegación entre las 3 pestañas
-    function switchTab(tab) {
-      const viewPlanner = document.getElementById('view-planner');
-      const viewRoute = document.getElementById('view-route');
-      const viewQuote = document.getElementById('view-quote');
-
-      const btnPlanner = document.getElementById('tab-btn-planner');
-      const btnRoute = document.getElementById('tab-btn-route');
-      const btnQuote = document.getElementById('tab-btn-quote');
-
-      // Clases activas / inactivas
-      const activeClass = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow";
-      const inactiveClass = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
-
-      [viewPlanner, viewRoute, viewQuote].forEach(v => v.classList.add('hidden'));
-      btnPlanner.className = inactiveClass;
-      btnRoute.className = inactiveClass;
-      btnQuote.className = inactiveClass;
-
-      if (tab === 'planner') {
-        viewPlanner.classList.remove('hidden');
-        btnPlanner.className = activeClass;
-        render();
-      } else if (tab === 'route') {
-        viewRoute.classList.remove('hidden');
-        btnRoute.className = activeClass;
-        setTimeout(() => {
-          initMap();
-          if (mapInstance) mapInstance.invalidateSize();
-        }, 100);
-      } else if (tab === 'quote') {
-        viewQuote.classList.remove('hidden');
-        btnQuote.className = activeClass;
-        updateQuotation();
-      }
-    }
-
-    function setFreightMode(mode) {
-      freightMode = mode;
-      const btnFtl = document.getElementById('btn-mode-ftl');
-      const btnLtl = document.getElementById('btn-mode-ltl');
-      const formFtl = document.getElementById('form-ftl-params');
-      const formLtl = document.getElementById('form-ltl-params');
-
-      if (mode === 'ftl') {
-        btnFtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
-        btnLtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
-        formFtl.classList.remove('hidden');
-        formLtl.classList.add('hidden');
-      } else {
-        btnLtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
-        btnFtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
-        formLtl.classList.remove('hidden');
-        formLtl.classList.add('hidden');
-      }
-      updateQuotation();
-    }
-
     function getCountryOptions(selectedCode) {
       return EUROPEAN_COUNTRIES.map(c => `
         <option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''}>${c.code} - ${c.name}</option>
@@ -829,21 +750,18 @@
     }
 
     function renderStopsInputs() {
-      const pickupCont = document.getElementById('pickup-stops-container');
-      const dropoffCont = document.getElementById('dropoff-stops-container');
+      // Renderizar en panel de Cotización y panel de Mapa en paralelo
+      const pContainers = [document.getElementById('pickup-stops-container'), document.getElementById('map-pickup-stops-container')];
+      const dContainers = [document.getElementById('dropoff-stops-container'), document.getElementById('map-dropoff-stops-container')];
 
-      pickupCont.innerHTML = pickupStops.map((stop, idx) => `
+      const pHTML = pickupStops.map((stop, idx) => `
         <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
           <span class="w-4 text-center font-mono font-bold text-emerald-800 text-[11px]">${idx + 1}.</span>
-          
           <select onchange="updatePickupField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-
-          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 9665)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          
+          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           <input type="text" value="${stop.city}" oninput="updatePickupField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
-
           ${idx > 0 ? `
             <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -852,18 +770,14 @@
         </div>
       `).join('');
 
-      dropoffCont.innerHTML = dropoffStops.map((stop, idx) => `
+      const dHTML = dropoffStops.map((stop, idx) => `
         <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
           <span class="w-4 text-center font-mono font-bold text-red-800 text-[11px]">${idx + 1}.</span>
-          
           <select onchange="updateDropoffField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-
-          <input type="text" value="${stop.cp}" oninput="updateDropoffField(${idx}, 'cp', this.value)" placeholder="CP (ej. 08040)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          
+          <input type="text" value="${stop.cp}" oninput="updateDropoffField(${idx}, 'cp', this.value)" placeholder="CP (ej. 4903)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           <input type="text" value="${stop.city}" oninput="updateDropoffField(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
-
           ${idx > 0 ? `
             <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -871,6 +785,9 @@
           ` : '<span class="w-4"></span>'}
         </div>
       `).join('');
+
+      pContainers.forEach(c => { if (c) c.innerHTML = pHTML; });
+      dContainers.forEach(c => { if (c) c.innerHTML = dHTML; });
 
       updateQuotation();
     }
@@ -891,7 +808,7 @@
 
     function updatePickupField(idx, field, val) {
       pickupStops[idx][field] = val;
-      updateQuotation();
+      renderStopsInputs();
     }
 
     function addDropoffStop() {
@@ -910,7 +827,7 @@
 
     function updateDropoffField(idx, field, val) {
       dropoffStops[idx][field] = val;
-      updateQuotation();
+      renderStopsInputs();
     }
 
     function setPreset(l, w, name, weight, color) {
@@ -921,7 +838,71 @@
       if (color) document.getElementById('p-color').value = color;
     }
 
-    // Arranque de la App
+    function switchTab(tab) {
+      const viewPlanner = document.getElementById('view-planner');
+      const viewMap = document.getElementById('view-map');
+      const viewQuote = document.getElementById('view-quote');
+
+      const btnPlanner = document.getElementById('tab-btn-planner');
+      const btnMap = document.getElementById('tab-btn-map');
+      const btnQuote = document.getElementById('tab-btn-quote');
+
+      [viewPlanner, viewMap, viewQuote].forEach(v => v.classList.add('hidden'));
+      [btnPlanner, btnMap, btnQuote].forEach(b => {
+        b.className = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 text-neutral-400 hover:text-white";
+      });
+
+      const activeClass = "px-3.5 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-2 bg-red-600 text-white shadow";
+
+      if (tab === 'planner') {
+        viewPlanner.classList.remove('hidden');
+        btnPlanner.className = activeClass;
+        render();
+      } else if (tab === 'map') {
+        viewMap.classList.remove('hidden');
+        btnMap.className = activeClass;
+        initOrResizeMap();
+      } else {
+        viewQuote.classList.remove('hidden');
+        btnQuote.className = activeClass;
+        updateQuotation();
+      }
+    }
+
+    function initOrResizeMap() {
+      if (!leafletMap) {
+        leafletMap = L.map('leaflet-map').setView([48.5, 4.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
+        mapRouteLayer = L.featureGroup().addTo(leafletMap);
+        mapMarkersLayer = L.featureGroup().addTo(leafletMap);
+      }
+      setTimeout(() => { leafletMap.invalidateSize(); }, 200);
+    }
+
+    function setFreightMode(mode) {
+      freightMode = mode;
+      const btnFtl = document.getElementById('btn-mode-ftl');
+      const btnLtl = document.getElementById('btn-mode-ltl');
+      const formFtl = document.getElementById('form-ftl-params');
+      const formLtl = document.getElementById('form-ltl-params');
+
+      if (mode === 'ftl') {
+        btnFtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
+        btnLtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
+        formFtl.classList.remove('hidden');
+        formLtl.classList.add('hidden');
+      } else {
+        btnLtl.className = "px-2 py-0.5 rounded font-bold bg-black text-white text-[11px]";
+        btnFtl.className = "px-2 py-0.5 rounded font-medium text-neutral-600 text-[11px]";
+        formLtl.classList.remove('hidden');
+        formFtl.classList.add('hidden');
+      }
+      updateQuotation();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date();
       document.getElementById('print-date').innerText = `Fecha: ${today.toLocaleDateString('es-ES')}`;
@@ -974,9 +955,9 @@
       document.getElementById('route-reference').value = '';
       if (mapRouteLayer) mapRouteLayer.clearLayers();
       if (mapMarkersLayer) mapMarkersLayer.clearLayers();
-      document.getElementById('route-stat-km').innerText = '0 km';
-      document.getElementById('route-stat-time').innerText = '0 h 00 m';
-      document.getElementById('route-stat-stops').innerText = '0 (+0 €)';
+      document.getElementById('map-stat-km').innerText = '0 km';
+      document.getElementById('map-stat-time').innerText = '--';
+      document.getElementById('map-stat-stops').innerText = '+0 €';
       renderStopsInputs();
       render();
       updateQuotation();
@@ -1452,43 +1433,60 @@
     }
 
     // ============================================================
-    // BÚSQUEDA Y TRAZADO DE RUTA EN MAPA LEAFLET
+    // BÚSQUEDA PRECISA POR CP EN TODA EUROPA (NL, DE, FR, ES...)
     // ============================================================
     async function geocodeStop(stop) {
       const country = (stop.country || 'ES').toLowerCase();
       let cp = (stop.cp || '').trim();
-      const city = (stop.city || '').trim();
+      let city = (stop.city || '').trim();
 
       if (!cp && !city) return null;
 
+      // Limpiar prefijo de país si el usuario ya lo escribió (ej: "NL-3133" -> "3133")
       cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '');
 
-      let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}&postalcode=${encodeURIComponent(cp)}`;
-      if (city) url += `&city=${encodeURIComponent(city)}`;
+      // 1. Intento: Consulta estructurada por postalcode + país
+      try {
+        let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
+        if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
+        if (city) url += `&city=${encodeURIComponent(city)}`;
 
-      let res = await fetch(url);
-      let data = await res.json();
+        let res = await fetch(url, { headers: { 'Accept-Language': 'es,en' } });
+        let data = await res.json();
 
-      if (!data || data.length === 0) {
-        let queryParts = [];
-        if (cp) queryParts.push(cp);
-        if (city) queryParts.push(city);
-        queryParts.push(stop.country);
-
-        const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryParts.join(', '))}&countrycodes=${encodeURIComponent(country)}`;
-        res = await fetch(fallbackUrl);
-        data = await res.json();
+        if (data && data.length > 0) {
+          return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
+        }
+      } catch (e) {
+        console.warn("Fallo en consulta estructurada:", e);
       }
 
-      if ((!data || data.length === 0) && country === 'nl' && /^\d{4}$/.test(cp)) {
-        const nlUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cp + ', Netherlands')}&countrycodes=nl`;
-        res = await fetch(nlUrl);
-        data = await res.json();
+      // 2. Intento: Búsqueda con nombre oficial de país
+      try {
+        const countryNames = {
+          nl: 'Nederland',
+          es: 'España',
+          fr: 'France',
+          de: 'Deutschland',
+          it: 'Italia',
+          pt: 'Portugal',
+          be: 'Belgique',
+          pl: 'Polska'
+        };
+        const cName = countryNames[country] || country;
+        const query = [cp, city, cName].filter(Boolean).join(', ');
+
+        const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=${encodeURIComponent(country)}`;
+        let res = await fetch(fallbackUrl, { headers: { 'Accept-Language': 'es,en' } });
+        let data = await res.json();
+
+        if (data && data.length > 0) {
+          return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
+        }
+      } catch (e) {
+        console.warn("Fallo en consulta fallback:", e);
       }
 
-      if (data && data.length > 0) {
-        return { lon: parseFloat(data[0].lon), lat: parseFloat(data[0].lat), display: data[0].display_name };
-      }
       return null;
     }
 
@@ -1496,107 +1494,75 @@
       const validPickups = pickupStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
       const validDropoffs = dropoffStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
 
-      const icon = document.getElementById('refresh-icon');
-      const text = document.getElementById('refresh-text');
+      const mapIcon = document.getElementById('map-refresh-icon');
+      if (mapIcon) mapIcon.classList.add('fa-spin');
 
       if (validPickups.length === 0 || validDropoffs.length === 0) {
         showToast('Indica al menos el código postal de origen y destino.');
+        if (mapIcon) mapIcon.classList.remove('fa-spin');
         updateQuotation();
         return;
       }
 
-      icon.classList.add('fa-spin');
-      text.innerText = 'Calculando...';
+      showToast('Calculando ruta por carretera...');
 
       const fullStops = [...validPickups, ...validDropoffs];
 
       try {
-        const coords = [];
-        const stopPoints = [];
-
+        const points = [];
         for (let i = 0; i < fullStops.length; i++) {
-          const point = await geocodeStop(fullStops[i]);
-          if (!point) {
+          const pt = await geocodeStop(fullStops[i]);
+          if (!pt) {
             throw new Error(`No se encontró el CP "${fullStops[i].cp || fullStops[i].city}" en ${fullStops[i].country}`);
           }
-          coords.push(`${point.lon},${point.lat}`);
-          stopPoints.push({
-            ...fullStops[i],
-            lat: point.lat,
-            lon: point.lon,
-            isPickup: i < validPickups.length
-          });
+          points.push(pt);
         }
 
-        // Llamada OSRM con polilínea completa (geometries=geojson)
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords.join(';')}?overview=full&geometries=geojson`;
+        const coordsStr = points.map(p => `${p.lon},${p.lat}`).join(';');
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
         const resRoute = await fetch(osrmUrl);
         const dataRoute = await resRoute.json();
 
         if (dataRoute.routes && dataRoute.routes.length > 0) {
           const route = dataRoute.routes[0];
-          const meters = route.distance;
-          const seconds = route.duration;
-          const calculatedKm = Math.max(1, Math.round(meters / 1000));
-          
+          const calculatedKm = Math.max(1, Math.round(route.distance / 1000));
           document.getElementById('ftl-km').value = calculatedKm;
 
-          // Métricas de ruta en pantalla
-          const hours = Math.floor(seconds / 3600);
-          const minutes = Math.round((seconds % 3600) / 60);
-          document.getElementById('route-stat-km').innerText = `${calculatedKm.toLocaleString('es-ES')} km`;
-          document.getElementById('route-stat-time').innerText = `${hours} h ${minutes} m`;
+          // Actualizar métricas del mapa
+          const hours = Math.floor(route.duration / 3600);
+          const minutes = Math.round((route.duration % 3600) / 60);
+          document.getElementById('map-stat-km').innerText = `${calculatedKm.toLocaleString('es-ES')} km`;
+          document.getElementById('map-stat-time').innerText = `${hours}h ${minutes}m`;
 
-          const extraPickups = Math.max(0, validPickups.length - 1);
-          const extraDropoffs = Math.max(0, validDropoffs.length - 1);
-          const extraStopsCount = extraPickups + extraDropoffs;
-          const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
-          document.getElementById('route-stat-stops').innerText = `${extraStopsCount} (+${extraStopsCount * stopRate} €)`;
-
-          // DIBUJAR EN EL MAPA LEAFLET
-          initMap();
-          if (mapInstance && mapRouteLayer && mapMarkersLayer) {
+          // Dibujar en el mapa Leaflet
+          if (leafletMap) {
             mapRouteLayer.clearLayers();
             mapMarkersLayer.clearLayers();
 
-            // 1. Trazado de carretera
             const geojsonLayer = L.geoJSON(route.geometry, {
-              style: {
-                color: '#dc2626', // Rojo LoadFlow
-                weight: 5,
-                opacity: 0.85
-              }
+              style: { color: '#dc2626', weight: 5, opacity: 0.85 }
             }).addTo(mapRouteLayer);
 
-            // 2. Marcadores personalizados de Paradas (Verde = Carga, Rojo = Descarga)
-            const bounds = L.latLngBounds();
-
-            stopPoints.forEach((p, idx) => {
-              bounds.extend([p.lat, p.lon]);
-
-              const markerColor = p.isPickup ? '#059669' : '#dc2626';
+            // Marcadores de paradas
+            points.forEach((pt, index) => {
+              const isPickup = index < validPickups.length;
+              const markerColor = isPickup ? '#059669' : '#dc2626';
               const markerIcon = L.divIcon({
-                className: 'custom-map-pin',
-                html: `
-                  <div style="background-color: ${markerColor}; color: white; width: 26px; height: 26px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: monospace; font-size: 11px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.35);">
-                    ${idx + 1}
-                  </div>
-                `,
+                className: 'custom-div-icon',
+                html: `<div style="background-color:${markerColor}; color:white; border-radius:9999px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.4);">${index + 1}</div>`,
                 iconSize: [26, 26],
                 iconAnchor: [13, 13]
               });
 
-              const label = `${p.isPickup ? 'Carga' : 'Descarga'} #${idx + 1}: ${p.country}-${p.cp} ${p.city ? `(${p.city})` : ''}`;
-              L.marker([p.lat, p.lon], { icon: markerIcon })
-                .bindPopup(`<strong style="font-size:12px; font-family:sans-serif;">${label}</strong>`)
+              L.marker([pt.lat, pt.lon], { icon: markerIcon })
+                .bindPopup(`<b>${isPickup ? 'Carga' : 'Descarga'} #${index + 1}</b><br>${pt.label}`)
                 .addTo(mapMarkersLayer);
             });
 
-            // Ajustar zoom automático para que quepa todo el trayecto
-            mapInstance.fitBounds(geojsonLayer.getBounds(), { padding: [40, 40] });
+            leafletMap.fitBounds(geojsonLayer.getBounds(), { padding: [40, 40] });
           }
 
-          showToast(`Ruta calculada: ${calculatedKm.toLocaleString('es-ES')} km (${fullStops.length} paradas).`);
+          showToast(`Ruta calculada: ${calculatedKm.toLocaleString('es-ES')} km.`);
         } else {
           throw new Error('No se pudo trazar la ruta por carretera.');
         }
@@ -1604,8 +1570,7 @@
       } catch (err) {
         showToast(err.message || 'Error en la búsqueda. Puedes introducir los km manualmente.');
       } finally {
-        icon.classList.remove('fa-spin');
-        text.innerText = 'Calcular Ruta en Mapa';
+        if (mapIcon) mapIcon.classList.remove('fa-spin');
         updateQuotation();
       }
     }
@@ -1646,6 +1611,10 @@
       const extraPickups = Math.max(0, validPickups.length - 1);
       const extraDropoffs = Math.max(0, validDropoffs.length - 1);
       const totalExtraStops = extraPickups + extraDropoffs;
+      const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
+
+      const mapStopsEl = document.getElementById('map-stat-stops');
+      if (mapStopsEl) mapStopsEl.innerText = `+${totalExtraStops * stopRate} €`;
 
       const ratioLdm = parseNum(document.getElementById('ratio-ldm').value, 1750);
       const totalPallets = items.length;
@@ -1673,7 +1642,6 @@
         const km = parseNum(document.getElementById('ftl-km').value, 0);
         const driverRate = parseNum(document.getElementById('ftl-driver-rate').value, 1.25);
         const markupPct = parseNum(document.getElementById('ftl-markup-pct').value, 15.0);
-        const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
         const extras = parseNum(document.getElementById('ftl-extras').value, 0);
 
         const stopsExtraCost = totalExtraStops * stopRate;
