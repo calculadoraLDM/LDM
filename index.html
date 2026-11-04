@@ -692,7 +692,6 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    // Por defecto ES (España) y campos vacíos
     let pickupStops = [{ cp: '', city: '', country: 'ES' }];
     let dropoffStops = [{ cp: '', city: '', country: 'ES' }];
 
@@ -734,7 +733,7 @@
           <select onchange="updatePickupField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updatePickupFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 08780 o 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updatePickupFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           <input type="text" value="${stop.city}" oninput="updatePickupFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
@@ -750,7 +749,7 @@
           <select onchange="updateDropoffField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updateDropoffFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 08040 o 2871)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updateDropoffFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 2872)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
           <input type="text" value="${stop.city}" oninput="updateDropoffFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
@@ -766,7 +765,6 @@
       updateQuotation();
     }
 
-    // Actualiza variables sin re-renderizar para no perder el foco
     function updatePickupFieldSilent(idx, field, val) {
       if (pickupStops[idx]) {
         pickupStops[idx][field] = val;
@@ -1442,7 +1440,7 @@
       });
     }
 
-    // GEOCODIFICADOR DE MÁXIMA PRECISIÓN: ZIPPOPOTAM + NOMINATIM FALLBACK
+    // GEOCODIFICADOR DE MÁXIMA PRECISIÓN: PHOTON/KOMOOT + ZIPPOPOTAM + NOMINATIM
     async function geocodeStop(stop) {
       const country = (stop.country || 'ES').toLowerCase();
       let cp = (stop.cp || '').trim();
@@ -1450,19 +1448,37 @@
 
       if (!cp && !city) return null;
 
-      // Limpiar prefijo de país si se escribió en el CP
       cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '').trim();
 
-      // 1. MOTOR PRIMARIO DE CÓDIGOS POSTALES (Zippopotam.us)
-      // Especialmente rápido y 100% exacto para NL (4 dígitos), ES (5 dígitos), DE, FR, etc.
+      // 1. Motor principal para transporte: Photon (OSM Komoot)
+      try {
+        const query = [cp, city, country.toUpperCase()].filter(Boolean).join(' ');
+        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
+        const resPhoton = await fetch(photonUrl);
+        const dataPhoton = await resPhoton.json();
+
+        if (dataPhoton.features && dataPhoton.features.length > 0) {
+          const feat = dataPhoton.features[0];
+          const name = feat.properties.city || feat.properties.name || city;
+          return {
+            lon: feat.geometry.coordinates[0],
+            lat: feat.geometry.coordinates[1],
+            label: `${stop.country}-${cp} ${name}`
+          };
+        }
+      } catch (err) {
+        console.warn("Fallo Photon, pasando a Zippopotam:", err);
+      }
+
+      // 2. Motor secundario de Códigos Postales: Zippopotam.us
       if (cp) {
         try {
           const zipClean = country === 'nl' ? cp.substring(0, 4) : cp;
-          const zipRes = await fetch(`https://api.zippopotam.us/${encodeURIComponent(country)}/${encodeURIComponent(zipClean)}`);
-          if (zipRes.ok) {
-            const zipData = await zipRes.json();
-            if (zipData.places && zipData.places.length > 0) {
-              const place = zipData.places[0];
+          const resZip = await fetch(`https://api.zippopotam.us/${encodeURIComponent(country)}/${encodeURIComponent(zipClean)}`);
+          if (resZip.ok) {
+            const dataZip = await resZip.json();
+            if (dataZip.places && dataZip.places.length > 0) {
+              const place = dataZip.places[0];
               return {
                 lon: parseFloat(place.longitude),
                 lat: parseFloat(place.latitude),
@@ -1471,11 +1487,11 @@
             }
           }
         } catch (errZip) {
-          console.warn("Fallo motor zippopotam, pasando a nominatim:", errZip);
+          console.warn("Fallo Zippopotam, pasando a Nominatim:", errZip);
         }
       }
 
-      // 2. MOTOR DE RESPALDO (Nominatim / OpenStreetMap con búsqueda estructurada)
+      // 3. Respaldo estructurado: Nominatim
       try {
         let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
         if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
@@ -1491,7 +1507,7 @@
         console.warn("Fallo búsqueda estructurada Nominatim:", e);
       }
 
-      // 3. Fallback con nombre de país
+      // 4. Fallback con nombre de país
       try {
         const countryNames = {
           nl: 'Nederland',
