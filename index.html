@@ -305,7 +305,6 @@
       <!-- Panel de Control Interno -->
       <div class="lg:col-span-5 space-y-4 no-print">
         
-        <!-- PARADAS CON CÓDIGO POSTAL Y PAÍS -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <div>
@@ -321,8 +320,6 @@
           </div>
 
           <div class="space-y-3 text-xs">
-            
-            <!-- Cargas -->
             <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
@@ -335,7 +332,6 @@
               <div id="pickup-stops-container" class="space-y-2"></div>
             </div>
 
-            <!-- Descargas -->
             <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-red-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
@@ -355,7 +351,6 @@
           </div>
         </div>
 
-        <!-- Tarifas y Redondeo Comercial -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
@@ -644,7 +639,7 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    // INICIA COMPLETAMENTE VACÍO
+    // Arranca vacío
     let pickupStops = [
       { cp: '', city: '', country: 'ES' }
     ];
@@ -652,16 +647,10 @@
       { cp: '', city: '', country: 'ES' }
     ];
 
-    const form = document.getElementById('pallet-form');
-    const truckLenInput = document.getElementById('truck-length');
-    const truckWidInput = document.getElementById('truck-width');
-    const truckMaxWeightInput = document.getElementById('truck-max-weight');
-    const ratioLdmInput = document.getElementById('ratio-ldm');
-
     function parseNum(val, defaultVal = 0) {
-      if (typeof val === 'number') return val;
+      if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
       if (!val) return defaultVal;
-      const clean = val.toString().replace(',', '.');
+      const clean = val.toString().trim().replace(',', '.');
       const parsed = parseFloat(clean);
       return isNaN(parsed) ? defaultVal : parsed;
     }
@@ -822,6 +811,35 @@
       document.getElementById('print-date').innerText = `Fecha: ${today.toLocaleDateString('es-ES')}`;
       renderStopsInputs();
       render();
+
+      // Listener robusto para el formulario de bultos
+      const palletForm = document.getElementById('pallet-form');
+      palletForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = (document.getElementById('p-name').value || 'Palé').trim();
+        const length = parseNum(document.getElementById('p-length').value, 1.20);
+        const width = parseNum(document.getElementById('p-width').value, 0.80);
+        const qty = parseInt(document.getElementById('p-qty').value, 10) || 1;
+        const weight = parseNum(document.getElementById('p-weight').value, 500);
+        const color = document.getElementById('p-color').value || '#000000';
+
+        if (length <= 0 || width <= 0) {
+          showToast('Las dimensiones del palé deben ser mayores a 0.');
+          return;
+        }
+
+        addPalletBatch(name, length, width, qty, weight, color);
+        autoArrange();
+        render();
+        updateQuotation();
+        showToast(`${qty} ${name} añadido(s) al camión.`);
+      });
+
+      // Inputs del tráiler
+      ['truck-length', 'truck-width', 'truck-max-weight', 'ratio-ldm'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => { render(); updateQuotation(); });
+      });
     });
 
     document.getElementById('btn-load-demo').addEventListener('click', () => {
@@ -830,24 +848,7 @@
       addPalletBatch('Europalé Estándar', 1.20, 0.80, 33, 500, '#000000');
       autoArrange();
       render();
-    });
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('p-name').value;
-      const length = parseNum(document.getElementById('p-length').value, 1.2);
-      const width = parseNum(document.getElementById('p-width').value, 0.8);
-      const qty = parseInt(document.getElementById('p-qty').value) || 1;
-      const weight = parseNum(document.getElementById('p-weight').value, 500);
-      const color = document.getElementById('p-color').value;
-
-      addPalletBatch(name, length, width, qty, weight, color);
-      autoArrange();
-      render();
-    });
-
-    [truckLenInput, truckWidInput, truckMaxWeightInput, ratioLdmInput].forEach(inp => {
-      inp.addEventListener('input', render);
+      updateQuotation();
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
@@ -859,11 +860,14 @@
       document.getElementById('route-reference').value = '';
       renderStopsInputs();
       render();
+      updateQuotation();
+      showToast('Camión y ruta vaciados.');
     });
 
     document.getElementById('btn-repack').addEventListener('click', () => {
       autoArrange();
       render();
+      updateQuotation();
     });
 
     document.getElementById('btn-rotate-all').addEventListener('click', () => {
@@ -874,6 +878,7 @@
       });
       autoArrange();
       render();
+      updateQuotation();
     });
 
     function addPalletBatch(name, length, width, qty, weight, color) {
@@ -901,6 +906,7 @@
       items = items.filter(it => it.groupId !== groupId);
       autoArrange();
       render();
+      updateQuotation();
     }
 
     function isOverlapping(x1, y1, w1, h1, x2, y2, w2, h2) {
@@ -914,8 +920,8 @@
     }
 
     function snapAndValidate(item, targetX, targetY, truckIndex, newLen = null, newWid = null) {
-      const truckL = parseNum(truckLenInput.value, 13.6);
-      const truckW = parseNum(truckWidInput.value, 2.44);
+      const truckL = parseNum(document.getElementById('truck-length').value, 13.6);
+      const truckW = parseNum(document.getElementById('truck-width').value, 2.44);
 
       const len = newLen !== null ? newLen : item.length;
       const wid = newWid !== null ? newWid : item.width;
@@ -953,7 +959,7 @@
       const item = items.find(i => i.id === itemId);
       if (!item) return;
 
-      const truckW = parseNum(truckWidInput.value, 2.44);
+      const truckW = parseNum(document.getElementById('truck-width').value, 2.44);
       const newLen = item.width;
       const newWid = item.length;
 
@@ -988,12 +994,13 @@
       item.x = check.x;
       item.y = check.y;
       render();
+      updateQuotation();
     }
 
     function autoArrange() {
-      const truckL = parseNum(truckLenInput.value, 13.6);
-      const truckW = parseNum(truckWidInput.value, 2.44);
-      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
+      const truckL = parseNum(document.getElementById('truck-length').value, 13.6);
+      const truckW = parseNum(document.getElementById('truck-width').value, 2.44);
+      const maxWeight = parseNum(document.getElementById('truck-max-weight').value, 24000);
 
       let currentTruck = 1;
       let currentX = 0;
@@ -1048,10 +1055,10 @@
     }
 
     function render() {
-      const truckL = parseNum(truckLenInput.value, 13.6);
-      const truckW = parseNum(truckWidInput.value, 2.44);
-      const maxWeight = parseNum(truckMaxWeightInput.value, 24000);
-      const ratioLdm = parseNum(ratioLdmInput.value, 1750);
+      const truckL = parseNum(document.getElementById('truck-length').value, 13.6);
+      const truckW = parseNum(document.getElementById('truck-width').value, 2.44);
+      const maxWeight = parseNum(document.getElementById('truck-max-weight').value, 24000);
+      const ratioLdm = parseNum(document.getElementById('ratio-ldm').value, 1750);
 
       const maxTruckId = items.length === 0 ? 1 : items.reduce((max, it) => Math.max(max, it.truckIndex || 1), 1);
       const trucksData = [];
@@ -1257,14 +1264,13 @@
       });
 
       setupDragAndDrop();
-      updateQuotation();
     }
 
     function setupDragAndDrop() {
       const pallets = document.querySelectorAll('.pallet-card');
       const dropzones = document.querySelectorAll('.truck-dropzone');
-      const truckL = parseNum(truckLenInput.value, 13.6);
-      const truckW = parseNum(truckWidInput.value, 2.44);
+      const truckL = parseNum(document.getElementById('truck-length').value, 13.6);
+      const truckW = parseNum(document.getElementById('truck-width').value, 2.44);
 
       let dragOffsetMetersX = 0;
       let dragOffsetMetersY = 0;
@@ -1301,7 +1307,7 @@
           if (!item) return;
 
           const rect = dz.getBoundingClientRect();
-          const targetTruckIndex = parseInt(dz.getAttribute('data-truck-index'));
+          const targetTruckIndex = parseInt(dz.getAttribute('data-truck-index'), 10);
 
           const clickX = e.clientX - rect.left;
           const clickY = e.clientY - rect.top;
@@ -1321,13 +1327,11 @@
           item.y = result.y;
 
           render();
+          updateQuotation();
         });
       });
     }
 
-    // ============================================================
-    // MOTOR DE BÚSQUEDA MULTIFORMATO PARA EUROPA (NL, ES, FR, DE, etc.)
-    // ============================================================
     async function geocodeStop(stop) {
       const country = (stop.country || 'ES').toLowerCase();
       let cp = (stop.cp || '').trim();
@@ -1335,17 +1339,14 @@
 
       if (!cp && !city) return null;
 
-      // Limpiar prefijo de país si el usuario ya lo escribió (ej: "NL-9665" -> "9665")
       cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '');
 
-      // Estrategia 1: Consulta estructurada por postalcode
       let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}&postalcode=${encodeURIComponent(cp)}`;
       if (city) url += `&city=${encodeURIComponent(city)}`;
 
       let res = await fetch(url);
       let data = await res.json();
 
-      // Estrategia 2: Países Bajos (NL) o Reino Unido suelen requerir consulta libre si no llevan letras
       if (!data || data.length === 0) {
         let queryParts = [];
         if (cp) queryParts.push(cp);
@@ -1357,7 +1358,6 @@
         data = await res.json();
       }
 
-      // Estrategia 3: Si es NL y son 4 dígitos, buscar prefijo postal
       if ((!data || data.length === 0) && country === 'nl' && /^\d{4}$/.test(cp)) {
         const nlUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cp + ', Netherlands')}&countrycodes=nl`;
         res = await fetch(nlUrl);
@@ -1426,8 +1426,10 @@
     }
 
     function updateQuotation() {
-      const ref = document.getElementById('route-reference').value;
-      const roundStep = parseNum(document.getElementById('round-mode').value, 25);
+      const refInput = document.getElementById('route-reference');
+      const ref = refInput ? refInput.value.trim() : '';
+      const roundModeInput = document.getElementById('round-mode');
+      const roundStep = roundModeInput ? parseNum(roundModeInput.value, 25) : 25;
 
       document.getElementById('preview-ref').innerText = ref || '-';
 
@@ -1455,7 +1457,7 @@
       const extraDropoffs = Math.max(0, validDropoffs.length - 1);
       const totalExtraStops = extraPickups + extraDropoffs;
 
-      const ratioLdm = parseNum(ratioLdmInput.value, 1750);
+      const ratioLdm = parseNum(document.getElementById('ratio-ldm').value, 1750);
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
 
