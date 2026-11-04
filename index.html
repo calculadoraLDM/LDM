@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Planificador LDM & Cotizador de Cargas Pro</title>
+  <title>LoadFlow | Planificador LDM & Cotizador</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,45 +32,78 @@
     }
 
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #print-area, #print-area * {
-        visibility: visible;
-      }
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
       #print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 24px;
-        background: white;
-        border: none !important;
-        box-shadow: none !important;
+        position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 24px;
+        background: white; border: none !important; box-shadow: none !important;
       }
-      .no-print {
-        display: none !important;
-      }
+      .no-print { display: none !important; }
     }
   </style>
 </head>
-<body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col">
-  
+<body class="bg-neutral-100 min-h-screen text-neutral-900 antialiased flex flex-col relative">
+
+  <!-- MODAL DE PAGO / PAYWALL (Bloqueo si no ha pagado 20 €) -->
+  <div id="auth-paywall-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-2xl p-6 sm:p-8 shadow-2xl border border-neutral-200 text-center relative overflow-hidden">
+      <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
+        <i class="fa-solid fa-truck-fast"></i>
+      </div>
+
+      <h2 class="text-xl font-extrabold text-neutral-900 uppercase tracking-tight">Acceso a LoadFlow Pro</h2>
+      <p class="text-xs text-neutral-500 mt-1 mb-6">Planificador de estiba 2D, cálculo de LDM y generador de cotizaciones en PDF</p>
+
+      <div id="auth-step-login" class="space-y-4">
+        <p class="text-xs text-neutral-600 leading-relaxed">Inicia sesión con tu cuenta de Google para acceder o validar tu licencia de acceso de por vida.</p>
+        <button onclick="loginWithGoogle()" class="w-full bg-neutral-900 hover:bg-black text-white font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-3 shadow-md border border-neutral-800">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>Continuar con Google</span>
+        </button>
+      </div>
+
+      <div id="auth-step-pay" class="hidden space-y-4">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-left text-xs">
+          <div class="text-neutral-500 text-[11px]">Sesión activa:</div>
+          <div id="user-display-email" class="font-bold text-neutral-900 truncate">usuario@gmail.com</div>
+        </div>
+
+        <div class="py-2">
+          <div class="text-3xl font-extrabold text-neutral-900 font-mono">20 €</div>
+          <div class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Pago único • Acceso ilimitado de por vida</div>
+        </div>
+
+        <a id="btn-pay-stripe" href="#" target="_blank" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
+          <i class="fa-solid fa-lock"></i>
+          <span>Desbloquear acceso ahora (20 €)</span>
+        </a>
+
+        <div class="pt-2 flex justify-between items-center text-[11px]">
+          <button onclick="checkUserAccess()" class="text-neutral-600 hover:text-black font-semibold underline">
+            <i class="fa-solid fa-rotate-right mr-1"></i> Ya he pagado, verificar
+          </button>
+          <button onclick="logout()" class="text-neutral-400 hover:text-red-600">Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast flotante -->
   <div id="toast-alert" class="fixed bottom-5 right-5 z-50 bg-black text-white border-l-4 border-red-600 px-4 py-3 rounded shadow-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none text-xs font-medium">
     <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
     <span id="toast-msg">Mensaje</span>
   </div>
 
-  <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-50 px-4 py-2.5 shadow-md no-print">
+  <!-- Cabecera -->
+  <header class="bg-black text-white border-b-2 border-red-600 sticky top-0 z-40 px-4 py-2.5 shadow-md no-print">
     <div class="w-full flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="bg-red-600 text-white font-extrabold text-lg px-2.5 py-1 rounded tracking-tighter flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-truck-ramp-box"></i>
         </div>
         <div>
-          <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">Planificador & Cotizador de Cargas</h1>
-          <p class="text-[11px] text-neutral-400 font-mono">Multiparada Dinámica (+75 €/parada) | Redondeo 25-50-100 € | PDF</p>
+          <h1 class="text-sm sm:text-base font-extrabold tracking-tight uppercase">LoadFlow Pro</h1>
+          <p class="text-[11px] text-neutral-400 font-mono">Rutas por Código Postal & País (Europa) | 1 LDM = 1.750 kg</p>
         </div>
       </div>
 
@@ -88,6 +122,9 @@
         </button>
         <button id="btn-reset" class="text-xs bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-3 py-1.5 rounded border border-neutral-700 hover:border-red-600 transition flex items-center gap-1.5">
           <i class="fa-solid fa-trash-can text-red-500"></i> <span>Vaciar</span>
+        </button>
+        <button onclick="logout()" title="Cerrar Sesión" class="text-xs bg-neutral-800 hover:bg-red-700 text-neutral-300 hover:text-white p-2 rounded transition">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
       </div>
     </div>
@@ -268,12 +305,15 @@
       <!-- Panel de Control Interno -->
       <div class="lg:col-span-5 space-y-4 no-print">
         
-        <!-- PARADAS DINÁMICAS (Cargas y Descargas Ilimitadas) -->
+        <!-- PARADAS CON CÓDIGO POSTAL Y PAÍS -->
         <div class="bg-white p-4 rounded-xl border border-neutral-300 shadow-sm">
           <div class="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
-            <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-route text-red-600"></i> Paradas de Ruta Dinámicas
-            </h2>
+            <div>
+              <h2 class="text-xs font-bold text-black uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-route text-red-600"></i> Paradas por Código Postal
+              </h2>
+              <p class="text-[10px] text-neutral-400">Rutas en toda Europa por CP</p>
+            </div>
             <button id="btn-calc-route" onclick="fetchRouteDistance()" class="bg-neutral-900 hover:bg-red-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition flex items-center gap-1.5 shadow-sm">
               <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i> 
               <span id="refresh-text">Refrescar & Calcular Ruta</span>
@@ -282,7 +322,7 @@
 
           <div class="space-y-3 text-xs">
             
-            <!-- Contenedor Cargas -->
+            <!-- Cargas -->
             <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200 space-y-2">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-emerald-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
@@ -292,12 +332,10 @@
                   <i class="fa-solid fa-plus mr-0.5"></i> Añadir Carga
                 </button>
               </div>
-              <div id="pickup-stops-container" class="space-y-1.5">
-                <!-- Se inyecta dinámicamente -->
-              </div>
+              <div id="pickup-stops-container" class="space-y-2"></div>
             </div>
 
-            <!-- Contenedor Descargas -->
+            <!-- Descargas -->
             <div class="bg-red-50/50 p-2.5 rounded-lg border border-red-200 space-y-2">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-red-900 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
@@ -307,9 +345,7 @@
                   <i class="fa-solid fa-plus mr-0.5"></i> Añadir Descarga
                 </button>
               </div>
-              <div id="dropoff-stops-container" class="space-y-1.5">
-                <!-- Se inyecta dinámicamente -->
-              </div>
+              <div id="dropoff-stops-container" class="space-y-2"></div>
             </div>
 
             <div>
@@ -331,12 +367,11 @@
             </div>
           </div>
 
-          <!-- Parámetros FTL -->
           <div id="form-ftl-params" class="space-y-3 text-xs">
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-neutral-500 font-medium mb-1">Distancia Ruta (km)</label>
-                <input type="number" id="ftl-km" value="620" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" />
+                <input type="number" id="ftl-km" value="28" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
               <div>
                 <label class="block text-neutral-500 font-medium mb-1">Coste Chófer (€/km)</label>
@@ -350,7 +385,7 @@
               </div>
               <div>
                 <label class="block text-neutral-500 font-medium mb-1">Extra por Parada Adicional (€)</label>
-                <input type="number" id="ftl-stop-rate" value="75" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" title="Cobro estándar: 75 € por cada carga o descarga adicional" />
+                <input type="number" id="ftl-stop-rate" value="75" oninput="updateQuotation()" class="w-full border border-neutral-300 rounded px-2 py-1 font-mono font-bold focus:border-red-600 focus:outline-none" />
               </div>
             </div>
             <div>
@@ -359,7 +394,6 @@
             </div>
           </div>
 
-          <!-- Parámetros LTL -->
           <div id="form-ltl-params" class="space-y-3 text-xs hidden">
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -383,7 +417,6 @@
             </div>
           </div>
 
-          <!-- Control de Redondeo al Alza (25 - 50 - 100) -->
           <div class="mt-3 pt-3 border-t border-neutral-200">
             <label class="block text-neutral-800 font-bold mb-1 text-[11px] flex items-center gap-1.5">
               <i class="fa-solid fa-arrow-up-right-dots text-red-600"></i> Redondeo al alza del Precio de Venta:
@@ -397,7 +430,6 @@
             </select>
           </div>
 
-          <!-- Cuadro de márgenes confidencial -->
           <div class="mt-3 p-2.5 bg-neutral-50 rounded border border-neutral-200 space-y-1 font-mono text-[11px]">
             <div class="flex justify-between text-neutral-500">
               <span>Coste Transporte:</span>
@@ -433,12 +465,11 @@
               <div class="text-[11px] text-neutral-500 font-mono mt-1">Referencia: <span id="preview-ref" class="font-bold text-black">EXPEDICIÓN R-2026-0048</span></div>
             </div>
             <div class="text-right">
-              <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">SERVICIO DE CARGA</div>
+              <div class="text-base font-extrabold tracking-tighter text-red-600 uppercase">LOADFLOW PRO</div>
               <div class="text-[10px] text-neutral-500 font-mono" id="print-date">Fecha: 03/11/2026</div>
             </div>
           </div>
 
-          <!-- Secuencia Dinámica en el PDF -->
           <div class="grid grid-cols-2 gap-3 mb-4 p-3 rounded-lg bg-neutral-50 border border-neutral-200">
             <div>
               <span class="text-[9px] uppercase tracking-wider font-extrabold text-emerald-800 block mb-1">
@@ -523,14 +554,104 @@
     </div>
   </main>
 
+  <!-- CONFIGURACIÓN DE AUTH Y CONTROL DE PAGO -->
+  <script>
+    const SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
+    const SUPABASE_ANON_KEY = "TU_ANON_KEY_DE_SUPABASE";
+    const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/TU_ENLACE_DE_20_EUROS";
+
+    let supabaseClient = null;
+    if (SUPABASE_URL !== "https://TU_PROYECTO.supabase.co") {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    async function loginWithGoogle() {
+      if (!supabaseClient) {
+        showToast("Configura tus credenciales de Supabase en el código.");
+        return;
+      }
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) showToast("Error al conectar con Google: " + error.message);
+    }
+
+    async function logout() {
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    async function checkUserAccess() {
+      if (!supabaseClient) {
+        document.getElementById('auth-paywall-modal').classList.add('hidden');
+        return;
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+
+      if (!session) {
+        document.getElementById('auth-paywall-modal').classList.remove('hidden');
+        document.getElementById('auth-step-login').classList.remove('hidden');
+        document.getElementById('auth-step-pay').classList.add('hidden');
+      } else {
+        const user = session.user;
+        document.getElementById('user-display-email').innerText = user.email;
+
+        const { data: profile } = await supabaseClient
+          .from('usuarios_pago')
+          .select('pagado')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && profile.pagado === true) {
+          document.getElementById('auth-paywall-modal').classList.add('hidden');
+        } else {
+          document.getElementById('auth-paywall-modal').classList.remove('hidden');
+          document.getElementById('auth-step-login').classList.add('hidden');
+          document.getElementById('auth-step-pay').classList.remove('hidden');
+          document.getElementById('btn-pay-stripe').href = `${STRIPE_CHECKOUT_URL}?prefilled_email=${encodeURIComponent(user.email)}`;
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkUserAccess);
+  </script>
+
+  <!-- MOTOR DE ESTIBA, PARADAS POR CP/PAÍS Y RUTAS -->
   <script>
     let palletGroups = [];
     let items = [];
     let freightMode = 'ftl';
 
-    // Listas dinámicas de paradas
-    let pickupStops = ['Barcelona'];
-    let dropoffStops = ['Madrid'];
+    // Lista de países más habituales en Europa
+    const EUROPEAN_COUNTRIES = [
+      { code: 'ES', name: 'España' },
+      { code: 'FR', name: 'Francia' },
+      { code: 'DE', name: 'Alemania' },
+      { code: 'IT', name: 'Italia' },
+      { code: 'PT', name: 'Portugal' },
+      { code: 'NL', name: 'Países Bajos' },
+      { code: 'BE', name: 'Bélgica' },
+      { code: 'PL', name: 'Polonia' },
+      { code: 'AT', name: 'Austria' },
+      { code: 'CH', name: 'Suiza' },
+      { code: 'CZ', name: 'Rep. Checa' },
+      { code: 'GB', name: 'Reino Unido' },
+      { code: 'HU', name: 'Hungría' },
+      { code: 'RO', name: 'Rumanía' },
+      { code: 'SK', name: 'Eslovaquia' },
+      { code: 'SE', name: 'Suecia' },
+      { code: 'DK', name: 'Dinamarca' }
+    ];
+
+    // Estructura de paradas con código postal, población y país
+    let pickupStops = [
+      { cp: '08780', city: 'Pallejà', country: 'ES' }
+    ];
+    let dropoffStops = [
+      { cp: '08040', city: 'Barcelona (Zona Franca)', country: 'ES' }
+    ];
 
     const form = document.getElementById('pallet-form');
     const truckLenInput = document.getElementById('truck-length');
@@ -556,40 +677,64 @@
       }, 2500);
     }
 
-    // GESTIÓN DE PARADAS DINÁMICAS
+    // RENDERIZADO DE PARADAS CON CÓDIGO POSTAL Y SELECTOR DE PAÍS
+    function getCountryOptions(selectedCode) {
+      return EUROPEAN_COUNTRIES.map(c => `
+        <option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''}>${c.code} - ${c.name}</option>
+      `).join('');
+    }
+
     function renderStopsInputs() {
       const pickupCont = document.getElementById('pickup-stops-container');
       const dropoffCont = document.getElementById('dropoff-stops-container');
 
       pickupCont.innerHTML = pickupStops.map((stop, idx) => `
-        <div class="flex items-center gap-1.5">
-          <span class="w-5 text-center font-mono font-bold text-emerald-800 text-[11px]">${idx + 1}.</span>
-          <input type="text" value="${stop}" oninput="updatePickupStop(${idx}, this.value)" placeholder="Punto de carga ${idx + 1}" class="flex-1 border border-neutral-300 rounded px-2 py-1 font-medium bg-white focus:border-red-600 focus:outline-none" />
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
+          <span class="w-4 text-center font-mono font-bold text-emerald-800 text-[11px]">${idx + 1}.</span>
+          
+          <select onchange="updatePickupField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
+            ${getCountryOptions(stop.country)}
+          </select>
+
+          <input type="text" value="${stop.cp}" oninput="updatePickupField(${idx}, 'cp', this.value)" placeholder="CP (ej. 08780)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          
+          <input type="text" value="${stop.city}" oninput="updatePickupField(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+
           ${idx > 0 ? `
-            <button type="button" onclick="removePickupStop(${idx})" class="text-neutral-400 hover:text-red-600 px-1.5 py-1">
+            <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
-          ` : '<span class="w-6"></span>'}
+          ` : '<span class="w-4"></span>'}
         </div>
       `).join('');
 
       dropoffCont.innerHTML = dropoffStops.map((stop, idx) => `
-        <div class="flex items-center gap-1.5">
-          <span class="w-5 text-center font-mono font-bold text-red-800 text-[11px]">${idx + 1}.</span>
-          <input type="text" value="${stop}" oninput="updateDropoffStop(${idx}, this.value)" placeholder="Punto de descarga ${idx + 1}" class="flex-1 border border-neutral-300 rounded px-2 py-1 font-medium bg-white focus:border-red-600 focus:outline-none" />
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded border border-neutral-200 shadow-sm">
+          <span class="w-4 text-center font-mono font-bold text-red-800 text-[11px]">${idx + 1}.</span>
+          
+          <select onchange="updateDropoffField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
+            ${getCountryOptions(stop.country)}
+          </select>
+
+          <input type="text" value="${stop.cp}" oninput="updateDropoffField(${idx}, 'cp', this.value)" placeholder="CP (ej. 08040)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          
+          <input type="text" value="${stop.city}" oninput="updateDropoffField(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+
           ${idx > 0 ? `
-            <button type="button" onclick="removeDropoffStop(${idx})" class="text-neutral-400 hover:text-red-600 px-1.5 py-1">
+            <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
-          ` : '<span class="w-6"></span>'}
+          ` : '<span class="w-4"></span>'}
         </div>
       `).join('');
 
       updateQuotation();
     }
 
+    // Al añadir parada, hereda automáticamente el país de la anterior
     function addPickupStop() {
-      pickupStops.push('');
+      const lastCountry = pickupStops.length > 0 ? pickupStops[pickupStops.length - 1].country : 'ES';
+      pickupStops.push({ cp: '', city: '', country: lastCountry });
       renderStopsInputs();
       showToast('Carga adicional añadida (+75 €)');
     }
@@ -601,13 +746,14 @@
       }
     }
 
-    function updatePickupStop(idx, val) {
-      pickupStops[idx] = val;
+    function updatePickupField(idx, field, val) {
+      pickupStops[idx][field] = val;
       updateQuotation();
     }
 
     function addDropoffStop() {
-      dropoffStops.push('');
+      const lastCountry = dropoffStops.length > 0 ? dropoffStops[dropoffStops.length - 1].country : 'ES';
+      dropoffStops.push({ cp: '', city: '', country: lastCountry });
       renderStopsInputs();
       showToast('Descarga adicional añadida (+75 €)');
     }
@@ -619,8 +765,8 @@
       }
     }
 
-    function updateDropoffStop(idx, val) {
-      dropoffStops[idx] = val;
+    function updateDropoffField(idx, field, val) {
+      dropoffStops[idx][field] = val;
       updateQuotation();
     }
 
@@ -810,7 +956,7 @@
       const newWid = item.length;
 
       if (newWid > truckW + 0.01) {
-        showToast(`Imposible girar: el ancho (${newWid.toFixed(2)}m) supera el ancho del camión.`);
+        showToast(`Imposible girar: el ancho supera los ${truckW.toFixed(2)}m.`);
         return;
       }
 
@@ -1177,59 +1323,82 @@
       });
     }
 
-    // ==========================================
-    // CÁLCULO DE RUTA MULTIPARADA DINÁMICA (OSRM)
-    // ==========================================
+    // ============================================================
+    // BÚSQUEDA PRECISA POR CÓDIGO POSTAL Y PAÍS (EUROPA)
+    // ============================================================
+    async function geocodeStop(stop) {
+      const country = (stop.country || 'ES').toLowerCase();
+      const cp = (stop.cp || '').trim();
+      const city = (stop.city || '').trim();
+
+      if (!cp && !city) return null;
+
+      // Estrategia 1: Búsqueda estructurada por postalcode y countrycodes
+      let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
+      if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
+
+      let res = await fetch(url);
+      let data = await res.json();
+
+      // Estrategia 2 (Fallback): Búsqueda de texto libre combinada con el país
+      if (!data || data.length === 0) {
+        const query = `${cp} ${city}, ${country}`.trim();
+        const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=${encodeURIComponent(country)}`;
+        res = await fetch(fallbackUrl);
+        data = await res.json();
+      }
+
+      if (data && data.length > 0) {
+        return { lon: data[0].lon, lat: data[0].lat };
+      }
+      return null;
+    }
+
     async function fetchRouteDistance() {
-      const activePickups = pickupStops.map(s => s.trim()).filter(s => s.length > 0);
-      const activeDropoffs = dropoffStops.map(s => s.trim()).filter(s => s.length > 0);
+      const validPickups = pickupStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
+      const validDropoffs = dropoffStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
 
       const icon = document.getElementById('refresh-icon');
       const text = document.getElementById('refresh-text');
 
-      if (activePickups.length === 0 || activeDropoffs.length === 0) {
-        showToast('Indica al menos un punto de carga y uno de descarga.');
+      if (validPickups.length === 0 || validDropoffs.length === 0) {
+        showToast('Indica al menos el código postal de origen y destino.');
         updateQuotation();
         return;
       }
 
       icon.classList.add('fa-spin');
-      text.innerText = 'Calculando...';
+      text.innerText = 'Buscando CP...';
 
-      // Secuencia completa de ruta
-      const fullStops = [...activePickups, ...activeDropoffs];
+      const fullStops = [...validPickups, ...validDropoffs];
 
       try {
-        const geoPromises = fullStops.map(s => 
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(s)}`)
-            .then(r => r.json())
-        );
-
-        const geoResults = await Promise.all(geoPromises);
         const coords = [];
-
-        for (let i = 0; i < geoResults.length; i++) {
-          if (!geoResults[i] || geoResults[i].length === 0) {
-            throw new Error(`Ubicación no encontrada: "${fullStops[i]}"`);
+        for (let i = 0; i < fullStops.length; i++) {
+          const point = await geocodeStop(fullStops[i]);
+          if (!point) {
+            throw new Error(`No se encontró el CP "${fullStops[i].cp || fullStops[i].city}" en ${fullStops[i].country}`);
           }
-          coords.push(`${geoResults[i][0].lon},${geoResults[i][0].lat}`);
+          coords.push(`${point.lon},${point.lat}`);
         }
 
+        // Consulta de ruta OSRM con coordenadas exactas
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coords.join(';')}?overview=false`;
         const resRoute = await fetch(osrmUrl);
         const dataRoute = await resRoute.json();
 
         if (dataRoute.routes && dataRoute.routes.length > 0) {
           const meters = dataRoute.routes[0].distance;
-          const calculatedKm = Math.round(meters / 1000);
+          const calculatedKm = Math.max(1, Math.round(meters / 1000));
           document.getElementById('ftl-km').value = calculatedKm;
-          showToast(`Ruta calculada: ${calculatedKm} km (${fullStops.length} paradas totales).`);
+          showToast(`Ruta calculada: ${calculatedKm} km (${fullStops.length} paradas).`);
         } else {
-          throw new Error('No se pudo calcular la ruta.');
+          throw new Error('No se pudo trazar la ruta por carretera.');
         }
 
       } catch (err) {
-        showToast('Ruta actualizada. Puedes ajustar los km manualmente.');
+        showToast(err.message || 'Error en la búsqueda por CP. Puedes ajustar los km manualmente.');
       } finally {
         icon.classList.remove('fa-spin');
         text.innerText = 'Refrescar & Calcular Ruta';
@@ -1237,7 +1406,6 @@
       }
     }
 
-    // REDONDEO AL ALZA PERSONALIZADO (25 - 50 - 100)
     function applyRoundUp(val, step) {
       if (!step || step === 0) return Math.round(val * 100) / 100;
       return Math.ceil(val / step) * step;
@@ -1249,34 +1417,30 @@
 
       document.getElementById('preview-ref').innerText = ref || '-';
 
-      // Actualizar paradas en el PDF
       const pList = document.getElementById('preview-pickups-list');
       const dList = document.getElementById('preview-dropoffs-list');
 
-      const validPickups = pickupStops.filter(s => s.trim().length > 0);
-      const validDropoffs = dropoffStops.filter(s => s.trim().length > 0);
+      const validPickups = pickupStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
+      const validDropoffs = dropoffStops.filter(s => (s.cp && s.cp.trim()) || (s.city && s.city.trim()));
 
       pList.innerHTML = validPickups.length > 0 ? validPickups.map((s, idx) => `
         <div class="flex items-center gap-1.5">
           <span class="text-[10px] font-mono text-emerald-700 font-bold">${idx + 1}.</span>
-          <span class="font-bold text-xs text-neutral-900">${s}</span>
+          <span class="font-bold text-xs text-neutral-900">${s.country}-${s.cp} ${s.city ? `(${s.city})` : ''}</span>
         </div>
       `).join('') : '<span class="text-neutral-400 italic">Sin origen definido</span>';
 
       dList.innerHTML = validDropoffs.length > 0 ? validDropoffs.map((s, idx) => `
         <div class="flex items-center gap-1.5">
           <span class="text-[10px] font-mono text-red-700 font-bold">${idx + 1}.</span>
-          <span class="font-bold text-xs text-neutral-900">${s}</span>
+          <span class="font-bold text-xs text-neutral-900">${s.country}-${s.cp} ${s.city ? `(${s.city})` : ''}</span>
         </div>
       `).join('') : '<span class="text-neutral-400 italic">Sin destino definido</span>';
 
-      // Cálculo de paradas extras:
-      // 1ª carga y 1ª descarga son base. El resto son paradas extras a 75€/ud.
       const extraPickups = Math.max(0, validPickups.length - 1);
       const extraDropoffs = Math.max(0, validDropoffs.length - 1);
       const totalExtraStops = extraPickups + extraDropoffs;
 
-      // Ocupación
       const ratioLdm = parseNum(ratioLdmInput.value, 1750);
       const totalPallets = items.length;
       const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
@@ -1300,7 +1464,7 @@
       let finalPrice = 0;
 
       if (freightMode === 'ftl') {
-        const km = parseNum(document.getElementById('ftl-km').value, 600);
+        const km = parseNum(document.getElementById('ftl-km').value, 28);
         const driverRate = parseNum(document.getElementById('ftl-driver-rate').value, 1.25);
         const markupPct = parseNum(document.getElementById('ftl-markup-pct').value, 15.0);
         const stopRate = parseNum(document.getElementById('ftl-stop-rate').value, 75);
@@ -1337,16 +1501,13 @@
       const marginProfit = finalPrice - totalCost;
       const marginNetPct = finalPrice > 0 ? (marginProfit / finalPrice) * 100 : 0;
 
-      // Actualizar cuadro de uso interno
       document.getElementById('calc-internal-cost').innerText = `${totalCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
       document.getElementById('calc-internal-profit').innerText = `+${marginProfit.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
       document.getElementById('calc-internal-margin').innerText = `${marginNetPct.toFixed(1)}% neto`;
 
-      // Precio final al cliente redondeado al alza
       const priceText = roundStep >= 1 ? finalPrice.toLocaleString('es-ES') : finalPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       document.getElementById('preview-recommended-price').innerText = `${priceText} € + IVA`;
 
-      // Tabla de partidas
       const tableBody = document.getElementById('preview-items-table');
       if (palletGroups.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-neutral-400 italic">No hay partidas de mercancía registradas</td></tr>`;
