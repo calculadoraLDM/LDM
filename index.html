@@ -692,8 +692,9 @@
       { code: 'DK', name: 'Dinamarca' }
     ];
 
-    let pickupStops = [{ cp: '', city: '', country: 'NL' }];
-    let dropoffStops = [{ cp: '', city: '', country: 'NL' }];
+    // Por defecto ES (España) y campos vacíos
+    let pickupStops = [{ cp: '', city: '', country: 'ES' }];
+    let dropoffStops = [{ cp: '', city: '', country: 'ES' }];
 
     let leafletMap = null;
     let mapRouteLayer = null;
@@ -733,8 +734,8 @@
           <select onchange="updatePickupField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updatePickupFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          <input type="text" value="${stop.city}" oninput="updatePickupFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updatePickupFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 08780 o 3133)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updatePickupFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removePickupStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -749,8 +750,8 @@
           <select onchange="updateDropoffField(${idx}, 'country', this.value)" class="w-24 border border-neutral-300 rounded px-1.5 py-1 text-[11px] font-bold bg-neutral-50 focus:border-red-600 focus:outline-none">
             ${getCountryOptions(stop.country)}
           </select>
-          <input type="text" value="${stop.cp}" oninput="updateDropoffFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 4903)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
-          <input type="text" value="${stop.city}" oninput="updateDropoffFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.cp}" oninput="updateDropoffFieldSilent(${idx}, 'cp', this.value)" placeholder="CP (ej. 08040 o 2871)" class="w-24 border border-neutral-300 rounded px-2 py-1 font-mono font-bold text-[11px] focus:border-red-600 focus:outline-none" />
+          <input type="text" value="${stop.city}" oninput="updateDropoffFieldSilent(${idx}, 'city', this.value)" placeholder="Población / Calle (opcional)" class="flex-1 border border-neutral-300 rounded px-2 py-1 text-[11px] focus:border-red-600 focus:outline-none" />
           ${idx > 0 ? `
             <button type="button" onclick="removeDropoffStop(${idx})" title="Eliminar parada" class="text-neutral-400 hover:text-red-600 px-1 py-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
@@ -769,7 +770,6 @@
     function updatePickupFieldSilent(idx, field, val) {
       if (pickupStops[idx]) {
         pickupStops[idx][field] = val;
-        // sincronizar el otro contenedor si existe
         syncInputsAcrossTabs('pickup', idx, field, val);
         updateQuotation();
       }
@@ -959,8 +959,8 @@
     document.getElementById('btn-reset').addEventListener('click', () => {
       palletGroups = [];
       items = [];
-      pickupStops = [{ cp: '', city: '', country: 'NL' }];
-      dropoffStops = [{ cp: '', city: '', country: 'NL' }];
+      pickupStops = [{ cp: '', city: '', country: 'ES' }];
+      dropoffStops = [{ cp: '', city: '', country: 'ES' }];
       document.getElementById('ftl-km').value = 0;
       document.getElementById('route-reference').value = '';
       if (mapRouteLayer) mapRouteLayer.clearLayers();
@@ -1442,17 +1442,40 @@
       });
     }
 
-    // GEOCODIFICADOR PRECISO PARA TODA EUROPA
+    // GEOCODIFICADOR DE MÁXIMA PRECISIÓN: ZIPPOPOTAM + NOMINATIM FALLBACK
     async function geocodeStop(stop) {
-      const country = (stop.country || 'NL').toLowerCase();
+      const country = (stop.country || 'ES').toLowerCase();
       let cp = (stop.cp || '').trim();
       let city = (stop.city || '').trim();
 
       if (!cp && !city) return null;
 
-      cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '');
+      // Limpiar prefijo de país si se escribió en el CP
+      cp = cp.replace(new RegExp(`^${country}[-\\s]*`, 'i'), '').trim();
 
-      // 1. Intento: postalcode + country
+      // 1. MOTOR PRIMARIO DE CÓDIGOS POSTALES (Zippopotam.us)
+      // Especialmente rápido y 100% exacto para NL (4 dígitos), ES (5 dígitos), DE, FR, etc.
+      if (cp) {
+        try {
+          const zipClean = country === 'nl' ? cp.substring(0, 4) : cp;
+          const zipRes = await fetch(`https://api.zippopotam.us/${encodeURIComponent(country)}/${encodeURIComponent(zipClean)}`);
+          if (zipRes.ok) {
+            const zipData = await zipRes.json();
+            if (zipData.places && zipData.places.length > 0) {
+              const place = zipData.places[0];
+              return {
+                lon: parseFloat(place.longitude),
+                lat: parseFloat(place.latitude),
+                label: `${stop.country}-${cp} ${city || place['place name']}`
+              };
+            }
+          }
+        } catch (errZip) {
+          console.warn("Fallo motor zippopotam, pasando a nominatim:", errZip);
+        }
+      }
+
+      // 2. MOTOR DE RESPALDO (Nominatim / OpenStreetMap con búsqueda estructurada)
       try {
         let url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=${encodeURIComponent(country)}`;
         if (cp) url += `&postalcode=${encodeURIComponent(cp)}`;
@@ -1462,13 +1485,13 @@
         let data = await res.json();
 
         if (data && data.length > 0) {
-          return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
+          return { lon: parseFloat(data[0].lon), lat: parseFloat(data[0].lat), label: `${stop.country}-${cp} ${city}` };
         }
       } catch (e) {
-        console.warn("Fallo búsqueda estructurada:", e);
+        console.warn("Fallo búsqueda estructurada Nominatim:", e);
       }
 
-      // 2. Intento: Fallback con nombre oficial
+      // 3. Fallback con nombre de país
       try {
         const countryNames = {
           nl: 'Nederland',
@@ -1488,7 +1511,7 @@
         let data = await res.json();
 
         if (data && data.length > 0) {
-          return { lon: data[0].lon, lat: data[0].lat, label: `${stop.country}-${cp} ${city}` };
+          return { lon: parseFloat(data[0].lon), lat: parseFloat(data[0].lat), label: `${stop.country}-${cp} ${city}` };
         }
       } catch (e) {
         console.warn("Fallo búsqueda fallback:", e);
